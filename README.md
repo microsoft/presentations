@@ -56,17 +56,28 @@ src/
 ├── enrichment.py         # ContentUrl fetching & note enrichment via Azure 
 └── renderer.py           # orchestrates parsing → enrichment → images → 
 tests/
-└── test_anim.py          # animation XML verification
+├── test_animations.py    # animation XML verification
+├── test_cli.py           # CLI argument parsing & entry point
+├── test_enrichment.py    # ContentUrl fetching & note enrichment
+├── test_images.py        # image generation & caching
+├── test_renderer.py      # end-to-end render pipeline
+├── test_slides.py        # slide builder functions
+├── test_spec_parser.py   # .spec.md parsing
+├── test_spec_writer.py   # spec round-trip writing
+└── test_style.py         # Style resolution from front-matter
 ```
 
 ## Features
 
-- **Slide types**: `title`, `content`, `section-header`, `two-column`
-- **Animations**: appear, fade, fly-in, wipe, zoom, float-in, split, blinds — applied per-shape via `**Animation**` directives
+- **Slide types**: `title`, `content`, `section-header`, `two-column`, `resource-box`
+- **Animations**: appear, fade, fly-in, fly-in-left, fly-in-right, fly-in-top, wipe, zoom, float-in, split, blinds — applied per-shape via `**Animation**` directives
 - **Static images**: reference local files with `**Image**: path [, left, top, width, height]`
 - **AI-generated images**: describe an image with `**ImagePrompt**` — generated via the Azure AI image endpoint and cached locally
-- **ContentUrls & note enrichment**: add `**ContentUrls**` per slide to fetch reference content and auto-generate supplemental speaker notes via Azure AI Inference
-- **Style from spec**: font sizes are configurable in the front-matter `style:` block
+- **ContentUrls & enrichment**: add `**ContentUrls**` per slide to fetch reference content and auto-enrich both slide bullets and speaker notes via Azure AI Inference
+- **Enrichment caching**: enriched slides are written back to the spec file with `**Enriched**: true` so subsequent builds skip re-enrichment (override with `--refetch`)
+- **Subtitle line breaks**: use `<br>` in `**Subtitle**` values to split text across multiple lines
+- **Style from spec**: font sizes, colors, and resource-box theming are configurable in the front-matter `style:` block
+- **Auto `.env` loading**: the CLI automatically loads `.env` from `<cwd>/.env` or `<cwd>/.azure/presentations/.env`
 - **Versioned output**: each build creates a new versioned `.pptx` so previous runs are never overwritten
 
 ## Spec File Format
@@ -109,6 +120,7 @@ style:
 | `content` | Title bar + bullet list |
 | `section-header` | Topic transition slide |
 | `two-column` | Side-by-side content (`**Left**:` / `**Right**:`) |
+| `resource-box` | Gradient heading + labelled resource boxes with name/URL rows |
 
 ### Image Generation
 
@@ -172,6 +184,23 @@ Font sizes are configurable in the front-matter `style:` block:
 | `heading_font_size` | 32 | Slide headings |
 | `column_heading_font_size` | 22 | Two-column headings |
 | `column_body_font_size` | 18 | Two-column body |
+| `slide_background` | #FFFFFF | Slide background color |
+| `subtitle_colors` | _(empty)_ | Comma-separated hex colors for gradient subtitle |
+| `badge_width` | 0.9 | Resource-box badge width (inches) |
+| `badge_height` | 1.1 | Resource-box badge height (inches) |
+| `badge_font_size` | 11 | Badge label font size (pt) |
+| `badge_corner_radius` | 12000 | Badge corner rounding (EMU) |
+| `badge_gradient_start` | #E3008C | Badge gradient start color |
+| `badge_gradient_end` | #6B2FA0 | Badge gradient end color |
+| `badge_text_color` | #FFFFFF | Badge text color |
+| `box_background` | #E8E8E8 | Resource box background color |
+| `box_border_color` | #5B5FC7 | Resource box border color |
+| `box_corner_radius` | 5000 | Box corner rounding (EMU) |
+| `divider_color` | #D0D0D0 | Box divider line color |
+| `name_color` | #000000 | Resource name text color |
+| `name_font_size` | 14 | Resource name font size (pt) |
+| `url_color` | #0078D4 | Resource URL text color |
+| `url_font_size` | 14 | Resource URL font size (pt) |
 
 ## Azure Infrastructure
 
@@ -181,6 +210,7 @@ The `infra/` directory contains Bicep templates for deploying Azure AI Foundry r
 
 ```
 infra/
+├── azure.yaml                  # azd service configuration
 ├── main.bicep                  # Subscription-level orchestration
 ├── main.parameters.json        # Parameter file for azd
 ├── abbreviations.json          # Azure resource naming abbreviations
@@ -189,7 +219,8 @@ infra/
 │   └── ai/
 │       └── foundry.bicep       # Azure AI Foundry + model deployments + Bing Grounding
 └── hooks/
-    └── postprovision.sh        # Post-deployment hook
+    ├── postprovision.ps1       # Post-deployment hook (Windows)
+    └── postprovision.sh        # Post-deployment hook (Linux/macOS)
 ```
 
 ### Deploy
@@ -217,9 +248,13 @@ After `azd up`, the following environment variables are populated:
 | `AZURE_AI_PROJECT_ENDPOINT` | Foundry project endpoint (used by image gen & enrichment) |
 | `AI_PROJECT_NAME` | Foundry account name |
 | `AZURE_RESOURCE_GROUP` | Resource group name |
+| `AZURE_LOCATION` | Azure region |
+| `AZURE_TENANT_ID` | Azure AD tenant ID |
 | `AZURE_AI_MODEL_DEPLOYMENT_NAME` | Chat model deployment name |
 | `AZURE_AI_IMAGE_MODEL_DEPLOYMENT_NAME` | Image model deployment name |
+| `AZURE_AI_TEXT_MODEL` | Fallback text model (used when `text_model` not set in front-matter) |
 | `BING_CONNECTION_NAME` | Bing connection name |
+| `BING_PROJECT_CONNECTION_ID` | Bing project connection resource ID |
 
 Authentication is handled by `DefaultAzureCredential` — run `az login` locally or use managed identity in CI.
 
@@ -233,7 +268,7 @@ Authentication is handled by `DefaultAzureCredential` — run `az login` locally
 ## CLI Reference
 
 ```
-python presentation.py <spec-file> [options]
+python presentations.py <spec-file> [options]
 
 positional arguments:
   spec                  Path to the .spec.md file
@@ -241,6 +276,8 @@ positional arguments:
 options:
   -o, --output-dir DIR  Output directory (default: output)
   --image-model MODEL   Image generation model name (overrides front-matter)
+  --refetch             Re-fetch and regenerate all AI enrichments, even if
+                        cached results exist in the spec file
   --slides SELECTION    Slide numbers to generate (1-indexed). Default: all.
                         Examples: '5', '3-7', '1,3,5-8'
 ```
