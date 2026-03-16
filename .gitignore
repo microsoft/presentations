@@ -1,0 +1,7 @@
+.azure
+.env
+.history
+.venv
+__pycache__
+output
+.speckit\specifications\*.md
