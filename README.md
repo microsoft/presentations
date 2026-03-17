@@ -22,7 +22,7 @@ This tool solves these problems by treating presentations as **code**: a simple 
 - **pip** — included with Python; used to install dependencies
 - **Azure Developer CLI (`azd`)** — required for provisioning Azure infrastructure ([Install](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd))
 - **Azure CLI (`az`)** — run `az login` so `DefaultAzureCredential` can authenticate ([Install](https://learn.microsoft.com/cli/azure/install-azure-cli))
-- **Azure AI Foundry resources** — run `azd up` from the `infra/` directory to provision the AI project endpoint, model deployments, and Bing Grounding connection (see [Azure Infrastructure](#azure-infrastructure))
+- **Azure AI Foundry resources** — run `azd up` from the `/` directory to provision the AI project endpoint, model deployments, and Bing Grounding connection (see [Azure Infrastructure](#azure-infrastructure))
 
 ## Quick Start
 
@@ -230,6 +230,26 @@ azd auth login
 azd init
 azd up
 ```
+
+### Supported Regions
+
+The `gpt-image-1.5` model (Global Standard) is available in a limited set of Azure regions. When running `azd up`, choose one of the following regions:
+
+| Region | Notes |
+|--------|-------|
+| `eastus2` | Recommended — broadest model availability |
+| `swedencentral` | Recommended — broadest model availability |
+| `centralus` | |
+| `canadacentral` | |
+| `eastus` | |
+| `francecentral` | |
+| `southcentralus` | |
+| `australiaeast` | |
+| `uksouth` | |
+| `westus` | |
+| `westus3` | |
+
+> **Note:** `gpt-image-1.5` requires [limited access registration](https://aka.ms/oai/gptimage1.5access). Regional availability changes over time — see the [Azure model availability table](https://learn.microsoft.com/azure/ai-services/openai/concepts/models#global-standard-model-availability) for the latest information.
 
 This provisions:
 - **Resource Group**

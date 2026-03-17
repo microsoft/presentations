@@ -6,8 +6,8 @@ targetScope = 'subscription'
 param environmentName string
 
 @minLength(1)
-@description('Primary location for all resources')
-@allowed(['australiaeast', 'eastasia', 'eastus', 'eastus2', 'northeurope', 'southcentralus', 'southeastasia', 'swedencentral', 'uksouth', 'westus2', 'eastus2euap'])
+@description('Primary location for all resources. Must support gpt-image-1.5 via Global Standard deployment.')
+@allowed(['australiaeast', 'canadacentral', 'centralus', 'eastus', 'eastus2', 'francecentral', 'southcentralus', 'swedencentral', 'uksouth', 'westus', 'westus3', 'eastus2euap'])
 @metadata({
   azd: {
     type: 'location'

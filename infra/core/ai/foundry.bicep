@@ -96,7 +96,7 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   }
 }
 
-// Deploy gpt-image-1 image generation model
+// Deploy gpt-image-1.5 image generation model
 resource imageModelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
   parent: foundryAccount
   name: imageModelDeploymentName
