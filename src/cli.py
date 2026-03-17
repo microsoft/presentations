@@ -24,8 +24,14 @@ def _load_env() -> None:
     cwd = os.getcwd()
     candidates = [
         os.path.join(cwd, ".env"),
-        os.path.join(cwd, ".azure", "presentations", ".env"),
     ]
+    # Search all azd environment directories
+    azure_dir = os.path.join(cwd, ".azure")
+    if os.path.isdir(azure_dir):
+        for entry in sorted(os.listdir(azure_dir)):
+            env_file = os.path.join(azure_dir, entry, ".env")
+            if os.path.isfile(env_file):
+                candidates.append(env_file)
     for env_path in candidates:
         if os.path.isfile(env_path):
             load_dotenv(env_path, override=False)

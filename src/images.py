@@ -160,8 +160,9 @@ def resolve_image_prompt(
     ip = slide_data.get("image_prompt")
     if not ip:
         return
-    # Don't overwrite an explicit **Image** field
-    if slide_data.get("image"):
+    # Don't overwrite an explicit **Image** field if the file exists
+    existing = slide_data.get("image")
+    if existing and os.path.isfile(existing.get("path", "")):
         return
 
     model = ip.get("model", default_model)
