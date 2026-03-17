@@ -38,6 +38,9 @@
     "imageModelCapacity": {
       "value": "${IMAGE_MODEL_CAPACITY=0}"
     },
+    "deployImageModel": {
+      "value": "${DEPLOY_IMAGE_MODEL=false}"
+    },
     "principalId": {
       "value": "${AZURE_PRINCIPAL_ID}"
     }

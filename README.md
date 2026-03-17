@@ -22,6 +22,7 @@ This tool solves these problems by treating presentations as **code**: a simple 
 - **pip** — included with Python; used to install dependencies
 - **Azure Developer CLI (`azd`)** — required for provisioning Azure infrastructure ([Install](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd))
 - **Azure CLI (`az`)** — run `az login` so `DefaultAzureCredential` can authenticate ([Install](https://learn.microsoft.com/cli/azure/install-azure-cli))
+- **GPT-Image-1.5 access** — this model requires a limited-access registration. You **must** apply and be approved before running `azd up`, or the deployment will fail. [Apply for GPT-Image-1.5 access](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/dall-e?tabs=command-line%2Cgpt-image-1%2Ckeyless%2Ctypescript-keyless&pivots=programming-language-studio#models-and-capabilities)
 - **Azure AI Foundry resources** — run `azd up` from the `/` directory to provision the AI project endpoint, model deployments, and Bing Grounding connection (see [Azure Infrastructure](#azure-infrastructure))
 
 ## Quick Start
@@ -231,6 +232,15 @@ azd init
 azd up
 ```
 
+If your subscription has access to `gpt-image-1.5`, enable the image model deployment:
+
+```bash
+azd env set DEPLOY_IMAGE_MODEL true
+azd up
+```
+
+Without this, slides with `**ImagePrompt**` directives will be skipped.
+
 ### Supported Regions
 
 The `gpt-image-1.5` model (Global Standard) is available in a limited set of Azure regions. When running `azd up`, choose one of the following regions:
@@ -249,13 +259,13 @@ The `gpt-image-1.5` model (Global Standard) is available in a limited set of Azu
 | `westus` | |
 | `westus3` | |
 
-> **Note:** `gpt-image-1.5` requires [limited access registration](https://aka.ms/oai/gptimage1.5access). Regional availability changes over time — see the [Azure model availability table](https://learn.microsoft.com/azure/ai-services/openai/concepts/models#global-standard-model-availability) for the latest information.
+> **⚠️ Important:** `gpt-image-1.5` requires limited-access registration — `azd up` will fail if your subscription has not been approved **unless** you set `DEPLOY_IMAGE_MODEL=false` (see [Deploy](#deploy)). [Apply for access here](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/dall-e?tabs=command-line%2Cgpt-image-1%2Ckeyless%2Ctypescript-keyless&pivots=programming-language-studio#models-and-capabilities). Regional availability changes over time — see the [Azure model availability table](https://learn.microsoft.com/azure/ai-services/openai/concepts/models#global-standard-model-availability) for the latest information.
 
 This provisions:
 - **Resource Group**
 - **Azure AI Foundry** account with a default project
 - **GPT chat model deployment** (GlobalStandard SKU)
-- **GPT image model deployment** (GlobalStandard SKU)
+- **GPT image model deployment** (GlobalStandard SKU) — _optional, requires [limited-access approval](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/dall-e?tabs=command-line%2Cgpt-image-1%2Ckeyless%2Ctypescript-keyless&pivots=programming-language-studio#models-and-capabilities)_
 - **Bing Grounding** connection for web-grounded search
 - **Agents capability host**
 

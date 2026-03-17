@@ -27,6 +27,9 @@ param imageModelName string = ''
 param imageModelVersion string = ''
 param imageModelCapacity int = 0
 
+@description('Set to true to deploy the gpt-image-1.5 model (requires limited-access approval)')
+param deployImageModel bool = false
+
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
@@ -57,6 +60,7 @@ module foundry './core/ai/foundry.bicep' = {
     imageModelName: !empty(imageModelName) ? imageModelName : 'gpt-image-1.5'
     imageModelVersion: !empty(imageModelVersion) ? imageModelVersion : '2025-12-16'
     imageModelCapacity: imageModelCapacity != 0 ? imageModelCapacity : 9
+    deployImageModel: deployImageModel
     principalId: principalId
   }
 }
@@ -68,6 +72,6 @@ output AZURE_LOCATION string = location
 output AZURE_RESOURCE_GROUP string = rg.name
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_AI_MODEL_DEPLOYMENT_NAME string = foundry.outputs.modelDeploymentName
-output AZURE_AI_IMAGE_MODEL_DEPLOYMENT_NAME string = foundry.outputs.imageModelDeploymentName
+output AZURE_AI_IMAGE_MODEL_DEPLOYMENT_NAME string = foundry.outputs.imageModelDeploymentName  // empty when deployImageModel=false
 output BING_PROJECT_CONNECTION_ID string = foundry.outputs.bingConnectionId
 output BING_CONNECTION_NAME string = foundry.outputs.bingConnectionName

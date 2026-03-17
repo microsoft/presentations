@@ -31,6 +31,9 @@ param imageModelVersion string
 @description('Image model capacity')
 param imageModelCapacity int
 
+@description('Whether to deploy the image generation model (requires limited-access approval)')
+param deployImageModel bool = false
+
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
@@ -96,8 +99,8 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   }
 }
 
-// Deploy gpt-image-1.5 image generation model
-resource imageModelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
+// Deploy gpt-image-1.5 image generation model (optional — requires limited-access approval)
+resource imageModelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = if (deployImageModel) {
   parent: foundryAccount
   name: imageModelDeploymentName
   dependsOn: [modelDeployment]
@@ -222,7 +225,7 @@ output foundryEndpoint string = foundryAccount.properties.endpoint
 output projectId string = defaultProject.id
 output projectEndpoint string = 'https://${foundryName}.services.ai.azure.com/api/projects/proj-default'
 output modelDeploymentName string = modelDeployment.name
-output imageModelDeploymentName string = imageModelDeployment.name
+output imageModelDeploymentName string = deployImageModel ? imageModelDeployment.name : ''
 output bingConnectionId string = bingConnection.id
 output bingConnectionName string = bingConnection.name
 output bingResourceId string = bingGrounding.id
