@@ -1,7 +1,7 @@
 ---
 title: Find your AI Productivity Boost
 subtitle: Find your AI Productivity Boost
-output: Your_AI_Producivity_Boost.pptx
+output: Your_AI_Productivity_Boost.pptx
 author: Microsoft
 duration: 60
 audience: business, IT
