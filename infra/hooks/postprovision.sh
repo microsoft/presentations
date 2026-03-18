@@ -47,6 +47,6 @@ echo "   Image Model Deployment: $AZURE_AI_IMAGE_MODEL_DEPLOYMENT_NAME"
 echo ""
 echo "   .env written to: $ENV_FILE"
 echo ""
-echo "You can now run: python presentation.py .speckit/specifications/ai101.spec.md"
+echo "You can now run: python presentation.py .speckit/specifications/ai_productivity_boost.spec.md"
 
 exit 0

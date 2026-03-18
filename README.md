@@ -35,7 +35,7 @@ source .venv/bin/activate
 .venv\Scripts\Activate.ps1
 
 pip install -r requirements.txt
-python presentations.py .speckit/specifications/ai101.spec.md
+python presentations.py .speckit/specifications/ai_productivity_boost.spec.md
 ```
 
 ```copilot

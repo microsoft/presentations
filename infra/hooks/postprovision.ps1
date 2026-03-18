@@ -49,6 +49,6 @@ Write-Host "   Image Model Deployment: $AZURE_AI_IMAGE_MODEL_DEPLOYMENT_NAME"
 Write-Host ""
 Write-Host "   .env written to: $envFile"
 Write-Host ""
-Write-Host "You can now run: python presentation.py .speckit/specifications/ai101.spec.md"
+Write-Host "You can now run: python presentation.py .speckit/specifications/ai_productivity_boost.spec.md"
 
 exit 0

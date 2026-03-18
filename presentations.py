@@ -4,7 +4,7 @@ Usage:
     python presentation.py <spec-file>
 
 Example:
-    python presentation.py .speckit/specifications/ai101.spec.md
+    python presentation.py .speckit/specifications/ai_productivity_boost.spec.md
 
 For the full implementation see the ``src/`` package.
 """

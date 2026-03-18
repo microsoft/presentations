@@ -225,7 +225,7 @@ Each slide is separated by `---` and begins with `## [type] Title`:
 
 ```bash
 # Generate a presentation from a spec file
-python presentation.py .speckit/specifications/ai101.spec.md
+python presentation.py .speckit/specifications/ai_productivity_boost.spec.md
 
 # Output is written to: output/<output-filename-from-spec>.pptx
 ```
