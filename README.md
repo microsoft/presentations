@@ -1,5 +1,10 @@
 # Presentation Generator
 
+[![PyPI version](https://img.shields.io/pypi/v/ms-presentations.svg)](https://pypi.org/project/ms-presentations/)
+[![Python versions](https://img.shields.io/pypi/pyversions/ms-presentations.svg)](https://pypi.org/project/ms-presentations/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+[![Publish to PyPI](https://github.com/microsoft/presentations/actions/workflows/publish.yml/badge.svg)](https://github.com/microsoft/presentations/actions/workflows/publish.yml)
+
 Reads a `.spec.md` file and produces a PowerPoint deck with animations, images, AI-generated visuals, and AI-enriched speaker notes.  
 
 ## Problem Statement
@@ -322,4 +327,46 @@ options:
                         cached results exist in the spec file
   --slides SELECTION    Slide numbers to generate (1-indexed). Default: all.
                         Examples: '5', '3-7', '1,3,5-8'
+```
+
+## Releasing to PyPI
+
+This project is published to PyPI as [`ms-presentations`](https://pypi.org/project/ms-presentations/). Releases are fully automated by [.github/workflows/publish.yml](.github/workflows/publish.yml) using PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC — no API tokens stored in GitHub).
+
+### One-time setup (per PyPI project)
+
+Configure a pending publisher on PyPI once, before the first release:
+
+1. Sign in at https://pypi.org and open https://pypi.org/manage/account/publishing/.
+2. Under **Add a new pending publisher**, enter:
+   - **PyPI Project Name:** `ms-presentations`
+   - **Owner:** `microsoft`
+   - **Repository name:** `presentations`
+   - **Workflow name:** `publish.yml`
+   - **Environment name:** `pypi`
+3. Repeat at https://test.pypi.org/manage/account/publishing/ with **Environment name:** `testpypi` for dry-run uploads.
+
+### Cut a release
+
+1. Bump the `version` in [pyproject.toml](pyproject.toml).
+2. Commit the bump on `main`.
+3. Tag and push:
+
+   ```powershell
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+4. The `Publish to PyPI` workflow builds the sdist + wheel, runs `twine check`, and uploads via OIDC.
+
+### Dry-run on TestPyPI
+
+GitHub → **Actions → Publish to PyPI → Run workflow → target: `testpypi`**.
+
+### Build locally
+
+```powershell
+pip install -e ".[dev]"
+python -m build
+python -m twine check dist/*
 ```

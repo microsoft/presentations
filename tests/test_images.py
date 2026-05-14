@@ -117,13 +117,20 @@ class TestResolveImagePrompt:
         resolve_image_prompt(slide, "output", default_model="m")
         assert slide.get("image") is None
 
-    def test_existing_image_not_overwritten(self):
+    def test_existing_image_not_overwritten(self, tmp_path):
+        # An explicit ``image`` whose file exists on disk must take precedence
+        # over ``image_prompt`` — ``resolve_image_prompt`` should not call the
+        # generator nor mutate the slide's image path.
+        existing = tmp_path / "existing.png"
+        existing.write_bytes(b"\x89PNG\r\n\x1a\n")
         slide = {
             "image_prompt": {"prompt": "A cat"},
-            "image": {"path": "existing.png"},
+            "image": {"path": str(existing)},
         }
-        resolve_image_prompt(slide, "output", default_model="m")
-        assert slide["image"]["path"] == "existing.png"
+        with patch("presentations.images.generate_image") as mock_gen:
+            resolve_image_prompt(slide, str(tmp_path), default_model="m")
+        mock_gen.assert_not_called()
+        assert slide["image"]["path"] == str(existing)
 
     def test_no_model_skips(self):
         slide = {"image_prompt": {"prompt": "A cat"}}
