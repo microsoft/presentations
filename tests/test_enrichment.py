@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from src.enrichment import (
+from presentations.enrichment import (
     _HTMLTextExtractor,
     _extract_ai_bullets,
     _fetch_url_text,
@@ -138,7 +138,7 @@ class TestEnrichNotesFromUrls:
         mock_client_cls.return_value.chat.completions.create.return_value = mock_response
 
         with patch.dict(os.environ, {"AI_PROJECT_NAME": "acct"}, clear=False), \
-             patch("src.enrichment._fetch_url_text", return_value="Fetched content"), \
+             patch("presentations.enrichment._fetch_url_text", return_value="Fetched content"), \
              patch.dict("sys.modules", {
                  "azure.identity": MagicMock(DefaultAzureCredential=mock_cred_cls),
                  "openai": MagicMock(AzureOpenAI=mock_client_cls),
@@ -190,7 +190,7 @@ class TestFetchUrlText:
         mock_resp.read.return_value = html
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)
         mock_resp.__exit__ = MagicMock(return_value=False)
-        with patch("src.enrichment.urllib.request.urlopen", return_value=mock_resp):
+        with patch("presentations.enrichment.urllib.request.urlopen", return_value=mock_resp):
             result = _fetch_url_text("https://example.com")
         assert "Hello World" in result
 
@@ -200,12 +200,12 @@ class TestFetchUrlText:
         mock_resp.read.return_value = html
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)
         mock_resp.__exit__ = MagicMock(return_value=False)
-        with patch("src.enrichment.urllib.request.urlopen", return_value=mock_resp):
+        with patch("presentations.enrichment.urllib.request.urlopen", return_value=mock_resp):
             result = _fetch_url_text("https://example.com", max_chars=100)
         assert len(result) <= 100
 
     def test_returns_empty_on_error(self):
-        with patch("src.enrichment.urllib.request.urlopen", side_effect=Exception("timeout")):
+        with patch("presentations.enrichment.urllib.request.urlopen", side_effect=Exception("timeout")):
             result = _fetch_url_text("https://bad-url.example.com")
         assert result == ""
 
@@ -215,7 +215,7 @@ class TestFetchUrlText:
         mock_resp.read.return_value = html
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)
         mock_resp.__exit__ = MagicMock(return_value=False)
-        with patch("src.enrichment.urllib.request.urlopen", return_value=mock_resp):
+        with patch("presentations.enrichment.urllib.request.urlopen", return_value=mock_resp):
             result = _fetch_url_text("https://example.com")
         assert "Visible" in result
         assert "var x" not in result

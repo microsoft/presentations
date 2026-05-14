@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from src.renderer import _next_version_path, _parse_slide_selection, render
+from presentations.renderer import _next_version_path, _parse_slide_selection, render
 
 
 # ---------------------------------------------------------------------------
@@ -132,8 +132,8 @@ class TestRender:
     def test_enrichment_skipped_when_cached(self, tmp_path):
         spec = self._make_spec(1)
         spec["slides"][0]["enriched"] = True
-        with patch("src.renderer.enrich_content_from_urls") as mock_ec, \
-             patch("src.renderer.enrich_notes_from_urls") as mock_en:
+        with patch("presentations.renderer.enrich_content_from_urls") as mock_ec, \
+             patch("presentations.renderer.enrich_notes_from_urls") as mock_en:
             render(spec, str(tmp_path))
         mock_ec.assert_not_called()
         mock_en.assert_not_called()
@@ -142,8 +142,8 @@ class TestRender:
         spec = self._make_spec(1)
         spec["slides"][0]["enriched"] = False
         spec["slides"][0]["content_urls"] = []
-        with patch("src.renderer.enrich_content_from_urls") as mock_ec, \
-             patch("src.renderer.enrich_notes_from_urls") as mock_en:
+        with patch("presentations.renderer.enrich_content_from_urls") as mock_ec, \
+             patch("presentations.renderer.enrich_notes_from_urls") as mock_en:
             render(spec, str(tmp_path))
         mock_ec.assert_called_once()
         mock_en.assert_called_once()
@@ -152,8 +152,8 @@ class TestRender:
         spec = self._make_spec(1)
         spec["slides"][0]["enriched"] = True
         spec["slides"][0]["content_urls"] = []
-        with patch("src.renderer.enrich_content_from_urls") as mock_ec, \
-             patch("src.renderer.enrich_notes_from_urls") as mock_en:
+        with patch("presentations.renderer.enrich_content_from_urls") as mock_ec, \
+             patch("presentations.renderer.enrich_notes_from_urls") as mock_en:
             render(spec, str(tmp_path), refetch=True)
         mock_ec.assert_called_once()
         mock_en.assert_called_once()
@@ -167,8 +167,8 @@ class TestRender:
     def test_enrichment_called_when_not_cached(self, tmp_path):
         spec = self._make_spec(1)
         spec["slides"][0]["enriched"] = False
-        with patch("src.renderer.enrich_content_from_urls") as mock_ec, \
-             patch("src.renderer.enrich_notes_from_urls") as mock_en:
+        with patch("presentations.renderer.enrich_content_from_urls") as mock_ec, \
+             patch("presentations.renderer.enrich_notes_from_urls") as mock_en:
             render(spec, str(tmp_path))
         mock_ec.assert_called_once()
         mock_en.assert_called_once()
@@ -176,8 +176,8 @@ class TestRender:
     def test_enrichment_called_with_refetch(self, tmp_path):
         spec = self._make_spec(1)
         spec["slides"][0]["enriched"] = True
-        with patch("src.renderer.enrich_content_from_urls") as mock_ec, \
-             patch("src.renderer.enrich_notes_from_urls") as mock_en:
+        with patch("presentations.renderer.enrich_content_from_urls") as mock_ec, \
+             patch("presentations.renderer.enrich_notes_from_urls") as mock_en:
             render(spec, str(tmp_path), refetch=True)
         mock_ec.assert_called_once()
         mock_en.assert_called_once()
@@ -191,9 +191,9 @@ class TestRender:
         def fake_enrich(slide_data, **kw):
             slide_data["notes"] = "enriched"
 
-        with patch("src.renderer.enrich_content_from_urls"), \
-             patch("src.renderer.enrich_notes_from_urls", side_effect=fake_enrich), \
-             patch("src.renderer.write_spec") as mock_write:
+        with patch("presentations.renderer.enrich_content_from_urls"), \
+             patch("presentations.renderer.enrich_notes_from_urls", side_effect=fake_enrich), \
+             patch("presentations.renderer.write_spec") as mock_write:
             render(spec, str(tmp_path), spec_path=str(spec_file))
         mock_write.assert_called_once()
 

@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ms-presentations"
+version = "0.1.0"
+description = "Generate PowerPoint decks from Markdown spec files with AI-enriched notes and images."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE.md"]
+authors = [
+    { name = "Microsoft Corporation" },
+]
+keywords = ["pptx", "powerpoint", "presentation", "azure-ai", "speckit", "markdown"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Office Suites",
+    "Topic :: Software Development :: Documentation",
+]
+dependencies = [
+    "python-pptx>=0.6.21",
+    "pyyaml>=6.0",
+    "lxml>=4.9",
+    "azure-ai-inference>=1.0.0b9",
+    "azure-identity>=1.15",
+    "python-dotenv>=1.0",
+    "openai>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "build>=1.0",
+    "twine>=5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/microsoft/presentations"
+Repository = "https://github.com/microsoft/presentations"
+Issues = "https://github.com/microsoft/presentations/issues"
+
+[project.scripts]
+presentations = "presentations.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["presentations*"]
+
+[tool.setuptools.package-data]
+presentations = ["py.typed"]

@@ -5,7 +5,7 @@ from lxml import etree
 from pptx import Presentation
 from pptx.oxml.ns import qn
 
-from src.animations import (
+from presentations.animations import (
     EFFECT_MAP,
     TARGET_SHAPE_MAP,
     _build_click_par,

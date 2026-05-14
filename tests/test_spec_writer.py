@@ -6,7 +6,7 @@ import textwrap
 
 import pytest
 
-from src.spec_writer import write_spec, _serialize_slide
+from presentations.spec_writer import write_spec, _serialize_slide
 
 
 # ---------------------------------------------------------------------------

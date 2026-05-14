@@ -9,7 +9,7 @@ import pytest
 from pptx import Presentation as PptxPresentation
 from pptx.util import Inches, Pt
 
-from src.slides import (
+from presentations.slides import (
     SLIDE_BUILDERS,
     _apply_position,
     _hex_to_rgb,
@@ -22,7 +22,7 @@ from src.slides import (
     add_title_slide,
     add_two_column_slide,
 )
-from src.style import Style
+from presentations.style import Style
 
 
 @pytest.fixture()

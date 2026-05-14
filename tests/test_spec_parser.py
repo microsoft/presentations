@@ -7,7 +7,7 @@ import textwrap
 
 import pytest
 
-from src.spec_parser import (
+from presentations.spec_parser import (
     parse_spec,
     _extract_bullets,
     _parse_animations,

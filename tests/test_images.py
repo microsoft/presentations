@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from src.images import (
+from presentations.images import (
     _get_image_cache_dir,
     _generate_image_azure,
     _prompt_cache_key,
@@ -88,7 +88,7 @@ class TestGenerateImage:
             "AZURE_AI_IMAGE_MODEL_DEPLOYMENT_NAME": "dall-e-3",
         }
         with patch.dict(os.environ, env, clear=False), \
-             patch("src.images._generate_image_azure", return_value="/fake/path.png") as mock_gen:
+             patch("presentations.images._generate_image_azure", return_value="/fake/path.png") as mock_gen:
             result = generate_image("a cat", str(tmp_path), model="dall-e-3")
             assert result == "/fake/path.png"
             call_kwargs = mock_gen.call_args
@@ -101,7 +101,7 @@ class TestGenerateImage:
             "AZURE_AI_IMAGE_MODEL_DEPLOYMENT_NAME": "",
         }
         with patch.dict(os.environ, env, clear=False), \
-             patch("src.images._generate_image_azure", return_value="/fake.png") as mock_gen:
+             patch("presentations.images._generate_image_azure", return_value="/fake.png") as mock_gen:
             result = generate_image("a cat", str(tmp_path), model="dall-e-3")
             assert result == "/fake.png"
 
@@ -134,7 +134,7 @@ class TestResolveImagePrompt:
         slide = {
             "image_prompt": {"prompt": "A cat", "left": 1.0, "top": 2.0},
         }
-        with patch("src.images.generate_image", return_value="/gen.png"):
+        with patch("presentations.images.generate_image", return_value="/gen.png"):
             resolve_image_prompt(slide, str(tmp_path), default_model="model")
         assert slide["image"]["path"] == "/gen.png"
         assert slide["image"]["left"] == 1.0
@@ -143,7 +143,7 @@ class TestResolveImagePrompt:
         slide = {
             "image_prompt": {"prompt": "A cat", "model": "custom-model"},
         }
-        with patch("src.images.generate_image", return_value="/gen.png") as mock_gen:
+        with patch("presentations.images.generate_image", return_value="/gen.png") as mock_gen:
             resolve_image_prompt(slide, str(tmp_path), default_model="default-model")
         assert mock_gen.call_args[1]["model"] == "custom-model"
 
@@ -166,7 +166,7 @@ class TestGenerateImageAzure:
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)
         mock_resp.__exit__ = MagicMock(return_value=False)
 
-        with patch("src.images._get_azure_token", return_value="fake_token"), \
+        with patch("presentations.images._get_azure_token", return_value="fake_token"), \
              patch("urllib.request.urlopen", return_value=mock_resp):
             result = _generate_image_azure(
                 prompt="a cat",
@@ -181,7 +181,7 @@ class TestGenerateImageAzure:
 
     def test_failure_returns_none(self, tmp_path):
         cached_path = str(tmp_path / "test.png")
-        with patch("src.images._get_azure_token", side_effect=Exception("auth failed")):
+        with patch("presentations.images._get_azure_token", side_effect=Exception("auth failed")):
             result = _generate_image_azure(
                 prompt="a cat",
                 cached_path=cached_path,
@@ -194,7 +194,7 @@ class TestGenerateImageAzure:
 
     def test_network_error_returns_none(self, tmp_path):
         cached_path = str(tmp_path / "test.png")
-        with patch("src.images._get_azure_token", return_value="fake_token"), \
+        with patch("presentations.images._get_azure_token", return_value="fake_token"), \
              patch("urllib.request.urlopen", side_effect=Exception("network error")):
             result = _generate_image_azure(
                 prompt="a cat",

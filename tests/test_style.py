@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pptx.util import Pt
 
-from src.style import Style, _DEFAULTS
+from presentations.style import Style, _DEFAULTS
 
 
 class TestStyleDefaults:

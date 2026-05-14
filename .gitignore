@@ -8,3 +8,10 @@ output
 scripts
 .speckit/specifications/*.md
 !.speckit/specifications/ai_productivity_boost.spec.md
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg

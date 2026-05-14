@@ -27,6 +27,15 @@ This tool solves these problems by treating presentations as **code**: a simple 
 
 ## Quick Start
 
+### Install from PyPI
+
+```bash
+pip install ms-presentations
+presentations path/to/deck.spec.md
+```
+
+### From source
+
 ```bash
 python -m venv .venv
 # Linux/macOS:
@@ -34,28 +43,31 @@ source .venv/bin/activate
 # Windows (PowerShell):
 .venv\Scripts\Activate.ps1
 
-pip install -r requirements.txt
-python presentations.py .speckit/specifications/ai_productivity_boost.spec.md
+pip install -e ".[dev]"
+presentations .speckit/specifications/ai_productivity_boost.spec.md
+# or equivalently
+python -m presentations .speckit/specifications/ai_productivity_boost.spec.md
 ```
 
 ```copilot
-activate .venv and execute presentations.py
+activate .venv and execute the presentations CLI
 ```
 
 ## Project Structure
 
 ```
-presentations.py          # thin wrapper – delegates to src/
-src/
+pyproject.toml            # package metadata + console script
+src/presentations/
 ├── __init__.py           # package exports (main, render, parse_spec)
+├── __main__.py           # enables `python -m presentations`
 ├── cli.py                # argparse CLI entry point
 ├── spec_parser.py        # .spec.md → metadata + slide list
 ├── style.py              # Style class (font sizes from front-matter)
 ├── slides.py             # slide builder functions (one per layout)
 ├── animations.py         # Open XML animation engine
 ├── images.py             # image generation via Azure AI REST endpoint
-├── enrichment.py         # ContentUrl fetching & note enrichment via Azure 
-└── renderer.py           # orchestrates parsing → enrichment → images → 
+├── enrichment.py         # ContentUrl fetching & note enrichment via Azure
+└── renderer.py           # orchestrates parsing → enrichment → images →
 tests/
 ├── test_animations.py    # animation XML verification
 ├── test_cli.py           # CLI argument parsing & entry point
@@ -298,7 +310,7 @@ Authentication is handled by `DefaultAzureCredential` — run `az login` locally
 ## CLI Reference
 
 ```
-python presentations.py <spec-file> [options]
+presentations <spec-file> [options]
 
 positional arguments:
   spec                  Path to the .spec.md file
