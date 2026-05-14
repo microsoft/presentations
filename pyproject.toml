@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ms-presentations"
-version = "0.1.1"
+version = "0.1.2"
 description = "Generate PowerPoint decks from Markdown spec files with AI-enriched notes and images."
 readme = "README.md"
 requires-python = ">=3.10"
