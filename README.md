@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/ms-presentations.svg)](https://pypi.org/project/ms-presentations/)
 [![Python versions](https://img.shields.io/pypi/pyversions/ms-presentations.svg)](https://pypi.org/project/ms-presentations/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
-[![Publish to PyPI](https://github.com/microsoft/presentations/actions/workflows/publish.yml/badge.svg)](https://github.com/microsoft/presentations/actions/workflows/publish.yml)
+[![Publish to PyPI](https://github.com/microsoft/presentations/actions/workflows/publish.yaml/badge.svg)](https://github.com/microsoft/presentations/actions/workflows/publish.yaml)
 
 Reads a `.spec.md` file and produces a PowerPoint deck with animations, images, AI-generated visuals, and AI-enriched speaker notes.  
 
@@ -331,7 +331,7 @@ options:
 
 ## Releasing to PyPI
 
-This project is published to PyPI as [`ms-presentations`](https://pypi.org/project/ms-presentations/). Releases are fully automated by [.github/workflows/publish.yml](.github/workflows/publish.yml) using PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC — no API tokens stored in GitHub).
+This project is published to PyPI as [`ms-presentations`](https://pypi.org/project/ms-presentations/). Releases are fully automated by [.github/workflows/publish.yaml](.github/workflows/publish.yaml) using PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC — no API tokens stored in GitHub).
 
 ### One-time setup (per PyPI project)
 
@@ -342,7 +342,7 @@ Configure a pending publisher on PyPI once, before the first release:
    - **PyPI Project Name:** `ms-presentations`
    - **Owner:** `microsoft`
    - **Repository name:** `presentations`
-   - **Workflow name:** `publish.yml`
+   - **Workflow name:** `publish.yaml`
    - **Environment name:** `pypi`
 3. Repeat at https://test.pypi.org/manage/account/publishing/ with **Environment name:** `testpypi` for dry-run uploads.
 
