@@ -46,10 +46,9 @@ style:
 **Animation**: title > fade
 **Animation**: subtitle > fade
 
-**ContentUrls**:
 **Enriched**: true
 
-**Notes**: This is not a hype talk. We'll cover what AI is, where it helps across job functions, and the guardrails needed to use AI in a business setting. I share an example of where I've used AI to give myself a productivity boost with the hopes of inspiring you to do the same.
+**Notes**: Good morning. This is not a hype talk. We'll cover what AI is, where it helps across job functions, and the guardrails needed to use AI in a business setting. I share an example of where I've used AI to give myself a productivity boost with the hopes of inspiring you to do the same.
 
 Just want to set expectations. I'll try to keep this talk accessible for business people while giving IT enough structure to align on governance and implementation realities. Does that sound like a deal?
 
@@ -65,13 +64,11 @@ Just want to set expectations. I'll try to keep this talk accessible for busines
 **ImagePrompt**: A modern illustration of interconnected gears and lightbulbs representing AI transforming business workflows, vibrant blue and gold tones on white background, clean professional style, 7.2, 1.5, 2.5, 2.5
 **Animation**: content > appear
 
-**ContentUrls**:
 **Enriched**: true
 
-**Notes**:
-You know they say that AI is the only technology that can read and accurately summarize a 100-page document in 10 seconds and still miss the whole point of the document'
+**Notes**: You know they say that AI is the only technology that can read and accurately summarize a 100-page document in 10 seconds and still miss the whole point of the document'
 
-But seriously even with all of its quirks AI is able to be useful and make a positive impact on people's work lives if its given the right context and is setup for success. 
+But seriously even with all of its quirks AI is able to be useful and make a positive impact on people's work lives if its given the right context and is setup for success.
 
 ---
 
@@ -81,16 +78,12 @@ But seriously even with all of its quirks AI is able to be useful and make a pos
 - Different from traditional software (explicit rules) → AI learns from examples
 - AI can assist with language, images, speech, forecasting, and recommendations
 
-
 **Image**: output\images\526a07ee81663280.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A friendly illustration explaining AI in simple terms, showing a brain made of colorful building blocks with arrows pointing to text and images and speech bubbles, soft pastel colors on white background, approachable presentation style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
-**Notes**: 
-
-With that said, what is AI?
+**Notes**: With that said, what is AI?
 
 AI helps computers do tasks that usually require human judgment by learning patterns from data.
 
@@ -104,7 +97,7 @@ Different “flavors” are optimized for different jobs: some models focus on r
 
 You may or may not have heard the term Generative AI. Generative AI doesn’t just analyze information, it *creates* new content like text, images, or code based on patterns it learned from data.  
 
-Lastly AI is more than just a model. real-world AI solutions combine models with data, software, and guardrails for security, monitoring, and reliability.  
+Lastly AI is more than just a model. real-world AI solutions combine models with data, software, and guardrails for security, monitoring, and reliability.
 
 ---
 
@@ -159,10 +152,10 @@ Key takeaway: strengths make AI a powerful assistant; weaknesses make human over
 - The shift: from automation → reasoning assistance → action via tools
 - Foundry Models are billed through Azure subscriptions and include Microsoft support and service-level agreements.
 - Modern foundation models support multimodality, tools, and massive context windows exceeding one million tokens.
+
 **Image**: output\images\8dcc3ae2c8ce7b71.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A horizontal timeline illustration showing the evolution of AI from simple rule boxes to neural networks to a glowing foundation model brain, minimalist line art style, blue gradient on white background, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: AI systems have been evolving since the 1950s. As the AI improved the real breakthrough came from when the interface to AI changed. People have been interacting with AI in plain language, which expands who can benefit.
@@ -180,7 +173,6 @@ Light moment: 'In the 1990s, AI could beat you at chess. In the 2020s, it can wr
 **Image**: output\images\19fbdc7d136f623c.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: Three distinct icons in a row representing predictive AI as a crystal ball with a chart, perception AI as an eye with sound waves, and generative AI as a pen writing sparks, clean flat design, purple blue and teal on white background, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: There are three broad categories of AI you'll run into, and each one does something different.
@@ -219,10 +211,10 @@ Up next: why outputs can be wrong and what to do about it.
 - Agents: plan multi-step work, call tools/APIs, follow policies, and report back
 - Copilots ground responses in Microsoft Graph data, respecting user permissions across Microsoft 365 apps.
 - Agent platforms provide managed hosting, scaling, identity, security, and observability for enterprise deployment.
+
 **Image**: output\images\550b2eeb03298a31.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: An ascending staircase illustration showing a simple chat bubble at the bottom, a copilot helper in the middle, and an autonomous agent with tools at the top, clean vector style, blue to purple gradient on white background, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: For the mixed audience: business users should think 'workflow helpers'; IT should think 'software that can call other systems'.
@@ -256,12 +248,9 @@ Key notion: agents require stronger controls than chat.
 **Animation**: left > fly-in-left
 **Animation**: right > fly-in-right
 
-**ContentUrls**:
 **Enriched**: true
 
-**Notes**:
-
-'My favorite myth: AI will replace most jobs quickly. The reality? AI still needs you to tell it exactly what you want a few different ways before it gets it right. We've got time.'
+**Notes**: 'My favorite myth: AI will replace most jobs quickly. The reality? AI still needs you to tell it exactly what you want a few different ways before it gets it right. We've got time.'
 
 Myths:
 - AI is a single product you 'install': people think you buy one thing and flip a switch. In reality, AI is a capability you weave into existing workflows, data, and teams — there's no magic box.
@@ -300,9 +289,7 @@ One key example of AI being a licensed professional: permissioning and data boun
 **Image**: output\images\55be9654603900ad.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A clean illustration of a department building with icons flowing in representing summarize search draft classify and automate tasks, bright corporate blue and green on white background, modern infographic style, 7.2, 1.5, 2.5, 2.5
 
-**Notes**: 
-If you're not sure where AI fits, start by listing tasks that are text-heavy, repetitive, or can help you make decisions.
-
+**Notes**: If you're not sure where AI fits, start by listing tasks that are text-heavy, repetitive, or can help you make decisions.
 
 ---
 
@@ -311,10 +298,10 @@ If you're not sure where AI fits, start by listing tasks that are text-heavy, re
 - Policy Q&A assistant (grounded in approved HR content)
 - Onboarding copilot: checklists, role-based FAQs, training paths
 - Drafting: job descriptions, interview guides, internal comms
+
 **Image**: output\images\351828d76ea1b0dd.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A friendly illustration of an HR office scene with an AI assistant helping with onboarding documents and interview guides, warm professional colors with blue accents on white background, modern flat style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: HR use cases should be careful about bias and fairness.
@@ -328,11 +315,10 @@ Recommend: start with 'content + drafting' assistive use cases and add automatio
 - Board and leadership briefing prep: summarize trends, risks, and performance narratives
 - Strategy synthesis: pull insights across market data, internal reports, and competitive intelligence
 - Transformation tracking: status roll-ups, initiative summaries, and cross-functional alignment
-.
+
 **Image**: output\images\4232881120b96786.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A polished illustration of a boardroom table with holographic AI charts and trend lines floating above it, showing strategy synthesis and briefing preparation, dark blue and gold tones on white background, executive presentation style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: For executive, strategy, transformation, and operating-model teams: AI's sweet spot is turning large volumes of information into decision-ready summaries. Instead of spending hours pulling together board-prep materials from a dozen sources, AI can draft the first version in minutes so leadership can focus on decisions instead of data gathering.
@@ -346,10 +332,10 @@ Recommend: start with 'content + drafting' assistive use cases and add automatio
 - Invoice / expense exception triage and narrative explanations
 - Variance analysis: summarize drivers and suggest follow-ups
 - Close process assistant: checklists, status roll-ups, drafting
+
 **Image**: output\images\3868a10aacfdea1b.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A clean illustration of financial documents with AI highlighting variance analysis and expense patterns, showing charts and invoices with a digital overlay, green and navy blue on white background, professional style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: The value from AI in finance: faster cycles, fewer errors, better consistency. Think about month-end close — AI can draft variance narratives, flag exceptions that need attention, and roll up status across teams so the process moves faster with less back-and-forth.
@@ -369,7 +355,6 @@ Outputs should be traceable to source data — AI shouldn't 'make up' numbers. A
 **Image**: output\images\2bf1fc37bbe0075d.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A dynamic illustration of a sales funnel with AI-powered personalization showing tailored messages flowing to different customer segments, orange and blue gradient on white background, modern marketing style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: For any growth-oriented team: AI accelerates the research-to-action loop. Instead of spending hours researching a prospect or manually tailoring outreach, AI can pull together relevant context and draft a personalized message in seconds.
@@ -393,7 +378,6 @@ Sales enablement is a quick win: give your team a copilot that can answer produc
 **Image**: output\images\02f4326a3a00f184.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A healthcare operations illustration showing AI processing insurance claims and medical documents, with a pharmacy shelf and primary care stethoscope integrated into a digital workflow, teal and white on light background, clean medical professional style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: One can use AI to improve operations and documentation workflows, augmenting clinician judgment. Pharmacy and Primary Care teams benefit from the similar patterns: summarize, search, draft, classify. The common thread across all of these is that AI handles the heavy lifting on reading, organizing, and drafting so your people can focus on the decisions that actually require expertise.
@@ -413,14 +397,13 @@ Human review remains essential.
 **Image**: output\images\e3eddc5760d0a1f6.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A developer workspace illustration showing code on a screen with an AI copilot suggesting improvements, surrounded by gears and cloud infrastructure icons, dark grey and electric blue on white background, modern tech style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: Enterprise Architecture and ATX teams could see immediate wins from AI-powered search and documentation.
 
 wins necessitate standards (prompting patterns, templates, policies), not one-off experiments.
 
-Evaluation and guardrails should be 'quality gates' for AI outputs. 
+Evaluation and guardrails should be 'quality gates' for AI outputs.
 
 ---
 
@@ -434,11 +417,9 @@ Evaluation and guardrails should be 'quality gates' for AI outputs.
 **Image**: output\images\c444e46b4d31e378.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A cybersecurity command center illustration with AI analyzing threat feeds and compliance documents, showing shields and lock icons with data streams, dark blue and red accent on white background, secure professional style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: For cybersecurity, risk, data governance, and identity teams: AI excels at turning high-volume alert streams and dense policy documents into concise, actionable summaries.
-
 
 ---
 
@@ -449,10 +430,10 @@ Evaluation and guardrails should be 'quality gates' for AI outputs.
 - Bias & fairness: uneven impacts across groups
 - Over-automation: removing needed human judgment
 - Operational risk: model drift and changing behavior
+
 **Image**: output\images\786bf1a68001d7d8.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: An illustration of a warning triangle being tamed by safety nets and guardrails, showing risks like hallucination bias and privacy being caught by protective layers, amber and blue on white background, clean infographic style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: The Risks are real but solvable with the right controls. Every department — from executive strategy to pharmacy ops to cybersecurity — faces these same risk categories; the controls are universal.
@@ -469,14 +450,13 @@ This is where responsible AI principles + concrete guardrails come into play.
 - Inclusiveness
 - Transparency
 - Accountability
+
 **Image**: output\images\50b0a424a4f72896.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A balanced scale illustration with the six responsible AI principles as icons: fairness as balanced weights, reliability as a shield, privacy as a lock, inclusiveness as diverse hands, transparency as a magnifying glass, accountability as a handshake, blue and purple on white background, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: You could use this as a mental checklist for every use case. Before you decide an AI solution is complete, run it through these six principles and ask whether you can honestly say you've addressed each one. These aren't aspirational goals — they're practical filters that help you catch problems early, like bias in hiring tools or privacy gaps in patient-facing systems, before they become real incidents.
-
 
 ---
 
@@ -489,10 +469,10 @@ This is where responsible AI principles + concrete guardrails come into play.
 - Monitoring & evaluation: test quality, detect drift, audit
 - Content filters classify hate, sexual, violence, and self-harm content across configurable severity levels.
 - Optional detectors flag jailbreak attempts, protected material, and PII in prompts or outputs.
+
 **Image**: output\images\1b9839851aac2083.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A protective barrier illustration showing five guardrail pillars labeled data boundaries and access controls and grounding and human-in-the-loop and monitoring, holding back a wave of data, teal and grey on white background, clean enterprise style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: Here are some practical guardrails that can help make AI safe to use in a business setting. For business folks, think of these as the safety rules that let you move fast without breaking things. For IT, these map directly to the controls and operational requirements you'd put around any system that touches sensitive data.
@@ -550,20 +530,22 @@ So my challenge to you: find your AI productivity boost. Your future self will t
 
 ## [content] How to start working with AI to improve your productivity (a 30-day playbook)
 
-- Pick one workflow with clear pain points (focus, time, cost, quality)
+- Pick one task with clear pain points (focus, time, cost, quality)
 - Define success metrics (time saved, accuracy, compliance, satisfaction)
 - Start with assist → then partial automation with approvals
 - Establish a lightweight governance loop (security, compliance, owners)
 - Pilot, measure, iterate, then scale
+
 **Image**: output\images\558da8142e453049.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A calendar and checklist illustration showing a 30-day sprint plan with milestone markers and a rocket launching from the final day, energetic blue and orange on white background, motivational infographic style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
 **Notes**: This is my ice bucket challenge for you.
 
 Adoption of AI in your work life comes from solving a problem for you with measured wins and scaling it with an iterative approach. Think of it as self-care for your work-life where you use task decomposition to leverage AI to help you be more productive.
+
+So pick one task with clear pain points. something you cant seem to focus enough energy on...
 
 ---
 
@@ -585,8 +567,7 @@ Adoption of AI in your work life comes from solving a problem for you with measu
 **Image**: output\images\f40106d74a76aed9.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A clean illustration of an open laptop with resource links and documents floating out of it, showing a bookshelf of guides and tools, blue and white on light background, friendly professional style, 7.2, 1.5, 2.5, 2.5
 
-**Notes**: Here are some resources so you can explore on your own. 
-
+**Notes**: Here are some resources so you can explore on your own.
 ---
 
 ## [content] Three takeaways
@@ -598,11 +579,9 @@ Adoption of AI in your work life comes from solving a problem for you with measu
 **Image**: output\images\ef4e686d502a3b21.png, 7.2, 1.5, 2.5, 2.5
 **ImagePrompt**: A podium with three golden takeaway cards floating above it, each showing a key icon for enterprise workflows and co-ownership and responsible scaling, blue and gold on white background, closing presentation style, 7.2, 1.5, 2.5, 2.5
 
-**ContentUrls**:
 **Enriched**: true
 
-**Notes**: 
-First: you are the architect of your work. Everything we talked about today — the guardrails, the task decomposition, the judgment calls — that's you. AI doesn't decide what matters, you do. AI doesn't know your context, your stakeholders, or your goals. You bring all of that. AI just lets you move faster once you've set the direction.
+**Notes**: First: you are the architect of your work. Everything we talked about today — the guardrails, the task decomposition, the judgment calls — that's you. AI doesn't decide what matters, you do. AI doesn't know your context, your stakeholders, or your goals. You bring all of that. AI just lets you move faster once you've set the direction.
 
 Second: find your Ai productivity boost. Somewhere in your week there's a chunk of work that takes disproportionate time and energy compared to the value it creates. Reconciling data across spreadsheets. Drafting the same status update every Friday. Reviewing contracts for boilerplate issues. Writing onboarding guides from scratch. Whatever it is — name it, break it into steps, and hand the repetitive parts to AI. That's your productivity unlock.
 
