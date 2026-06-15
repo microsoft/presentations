@@ -203,3 +203,53 @@ class TestRender:
         render(spec, str(tmp_path))
         captured = capsys.readouterr()
         assert "unknown slide type" in captured.out.lower()
+
+
+# ---------------------------------------------------------------------------
+# Mixed core + rich layout geometry (issue #5)
+# ---------------------------------------------------------------------------
+
+
+class TestMixedLayoutGeometry:
+    def test_core_slide_spans_forced_widescreen(self, tmp_path):
+        """A rich slide forces 16:9; the core content title must scale to span it."""
+        from pptx import Presentation as PptxPresentation
+        from pptx.util import Inches
+
+        spec = {
+            "metadata": {"output": "mixed.pptx"},
+            "slides": [
+                {
+                    "type": "hero-title",
+                    "title": "Rich Slide Forces Widescreen",
+                    "subtitle": "16:9",
+                    "notes": "",
+                    "animations": [],
+                    "positions": {},
+                    "content_urls": [],
+                    "enriched": True,
+                    "data": {},
+                },
+                {
+                    "type": "content",
+                    "title": "Core Slide On The Forced Canvas",
+                    "bullets": ["a", "b"],
+                    "notes": "",
+                    "animations": [],
+                    "positions": {},
+                    "content_urls": [],
+                    "enriched": True,
+                },
+            ],
+        }
+        path = render(spec, str(tmp_path))
+
+        prs = PptxPresentation(path)
+        assert prs.slide_width == Inches(13.333)  # rich layout forced widescreen
+        scale = prs.slide_width / Inches(10)
+        content_title = prs.slides[1].shapes.title
+        # Title scaled to span the widescreen canvas (was a fixed 8.5" before the fix)
+        assert content_title.width == Inches(8.5 * scale)
+        # Right-hand gap is the 4:3 gap (1.0") scaled, ~1.33" — not the ~4.33" bug
+        right_gap = prs.slide_width - content_title.left - content_title.width
+        assert right_gap < Inches(1.5)

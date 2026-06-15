@@ -11,10 +11,12 @@ from pptx.util import Inches, Pt
 
 from presentations.slides import (
     SLIDE_BUILDERS,
+    _CONTENT_DEFAULTS,
     _apply_position,
     _hex_to_rgb,
     _interpolate_colors,
     _is_url,
+    _scaled_defaults,
     _set_text_with_breaks,
     add_content_slide,
     add_resource_box_slide,
@@ -28,6 +30,15 @@ from presentations.style import Style
 @pytest.fixture()
 def prs():
     return PptxPresentation()
+
+
+@pytest.fixture()
+def wide_prs():
+    """A widescreen (16:9, 13.333" wide) presentation, as a rich layout forces."""
+    p = PptxPresentation()
+    p.slide_width = Inches(13.333)
+    p.slide_height = Inches(7.5)
+    return p
 
 
 @pytest.fixture()
@@ -509,3 +520,84 @@ class TestAddResourceBoxSlide:
         }
         add_resource_box_slide(prs, data, style)
         assert len(prs.slides) == 1
+
+
+# ---------------------------------------------------------------------------
+# _scaled_defaults – canvas-width scaling for core builders (issue #5)
+# ---------------------------------------------------------------------------
+
+
+class TestScaledDefaults:
+    def test_unchanged_on_4_3_canvas(self, prs):
+        """On a default 10" (4:3) deck the scale factor is exactly 1.0."""
+        result = _scaled_defaults(prs, _CONTENT_DEFAULTS)
+        assert result == _CONTENT_DEFAULTS
+        # A fresh dict is returned (not the module-level constant)
+        assert result is not _CONTENT_DEFAULTS
+
+    def test_scales_horizontal_on_widescreen(self, wide_prs):
+        """On a 13.333" deck, left/width scale by ~1.3333; top/height untouched."""
+        scale = wide_prs.slide_width / Inches(10)
+        result = _scaled_defaults(wide_prs, _CONTENT_DEFAULTS)
+        title = result["title"]
+        assert title["left"] == pytest.approx(0.5 * scale)
+        assert title["width"] == pytest.approx(8.5 * scale)
+        # Vertical values are constant across aspect ratios
+        assert title["top"] == _CONTENT_DEFAULTS["title"]["top"]
+        assert title["height"] == _CONTENT_DEFAULTS["title"]["height"]
+
+    def test_does_not_mutate_input(self, wide_prs):
+        before = {k: dict(v) for k, v in _CONTENT_DEFAULTS.items()}
+        _scaled_defaults(wide_prs, _CONTENT_DEFAULTS)
+        assert _CONTENT_DEFAULTS == before
+
+
+class TestWidescreenCoreGeometry:
+    """Regression for issue #5: core slides must span a forced 16:9 canvas."""
+
+    def test_content_title_spans_widescreen(self, wide_prs, style):
+        data = {
+            "type": "content",
+            "title": "Core Slide On The Right Canvas",
+            "bullets": ["a"],
+            "notes": "",
+            "animations": [],
+            "positions": {},
+        }
+        add_content_slide(wide_prs, data, style)
+        title = wide_prs.slides[0].shapes.title
+        scale = wide_prs.slide_width / Inches(10)
+        # Title width scales to ~11.33" (8.5 x 1.3333), not the old 8.5"
+        assert title.width == Inches(8.5 * scale)
+        # Right-hand gap is the 4:3 gap (1.0") scaled, ~1.33" — not the ~4.33" bug
+        right_gap = wide_prs.slide_width - title.left - title.width
+        assert right_gap < Inches(1.5)
+
+    def test_two_column_right_spans_widescreen(self, wide_prs, style):
+        data = {
+            "type": "two-column",
+            "title": "Compare",
+            "left_bullets": ["L"],
+            "right_bullets": ["R"],
+            "notes": "",
+            "animations": [],
+            "positions": {},
+        }
+        add_two_column_slide(wide_prs, data, style)
+        scale = wide_prs.slide_width / Inches(10)
+        right_ph = wide_prs.slides[0].placeholders[2]
+        assert right_ph.left == Inches(5.0 * scale)
+        assert right_ph.width == Inches(4.25 * scale)
+
+    def test_section_header_subtitle_spans_widescreen(self, wide_prs, style):
+        data = {
+            "type": "section-header",
+            "title": "Section",
+            "subtitle": "Break",
+            "notes": "",
+            "animations": [],
+            "positions": {},
+        }
+        add_section_header_slide(wide_prs, data, style)
+        scale = wide_prs.slide_width / Inches(10)
+        assert wide_prs.slides[0].shapes.title.width == Inches(9.0 * scale)

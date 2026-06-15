@@ -124,6 +124,26 @@ _SECTION_DEFAULTS = {
 }
 
 
+def _scaled_defaults(prs, defaults: dict) -> dict:
+    """Scale horizontal (left/width) values of *defaults* to the deck's canvas width.
+
+    Core builder defaults are authored for a 10" (4:3) canvas. A rich layout can force
+    the deck to 16:9 (13.333" wide), so left/width must scale to span it. top/height are
+    vertical and left unchanged. The scale factor is exactly 1.0 on a 4:3 deck, so 4:3
+    output is unchanged.
+    """
+    scale = prs.slide_width / Inches(10)
+    out: dict = {}
+    for key, pos in defaults.items():
+        scaled = dict(pos)
+        if "left" in scaled:
+            scaled["left"] *= scale
+        if "width" in scaled:
+            scaled["width"] *= scale
+        out[key] = scaled
+    return out
+
+
 def add_content_slide(
     prs: Presentation,
     slide_data: dict,
@@ -136,9 +156,10 @@ def add_content_slide(
     positions = slide_data.get("positions", {})
     slide.shapes.title.text = slide_data["title"]
     slide.shapes.title.text_frame.paragraphs[0].font.size = style.heading_font
-    _apply_position(slide.shapes.title, positions.get("title") or _CONTENT_DEFAULTS["title"])
+    defaults = _scaled_defaults(prs, _CONTENT_DEFAULTS)
+    _apply_position(slide.shapes.title, positions.get("title") or defaults["title"])
     body_ph = slide.shapes.placeholders[1]
-    content_pos = positions.get("content") or _CONTENT_DEFAULTS["content"].copy()
+    content_pos = positions.get("content") or defaults["content"].copy()
     # Constrain content width when image is present to prevent overlap
     img = slide_data.get("image")
     if img and "content" not in positions:
@@ -171,12 +192,13 @@ def add_section_header_slide(
     positions = slide_data.get("positions", {})
     slide.shapes.title.text = slide_data["title"]
     slide.shapes.title.text_frame.paragraphs[0].font.size = style.title_font
-    _apply_position(slide.shapes.title, positions.get("title") or _SECTION_DEFAULTS["title"])
+    defaults = _scaled_defaults(prs, _SECTION_DEFAULTS)
+    _apply_position(slide.shapes.title, positions.get("title") or defaults["title"])
     subtitle = slide_data.get("subtitle", "")
     if subtitle:
         slide.placeholders[1].text = subtitle
         slide.placeholders[1].text_frame.paragraphs[0].font.size = style.subtitle_font
-        _apply_position(slide.placeholders[1], positions.get("subtitle") or _SECTION_DEFAULTS["subtitle"])
+        _apply_position(slide.placeholders[1], positions.get("subtitle") or defaults["subtitle"])
     slide.notes_slide.notes_text_frame.text = slide_data.get("notes", "")
     if slide_data.get("image"):
         _add_image(slide, slide_data["image"], positions.get("image"))
@@ -196,10 +218,11 @@ def add_two_column_slide(
     positions = slide_data.get("positions", {})
     slide.shapes.title.text = slide_data["title"]
     slide.shapes.title.text_frame.paragraphs[0].font.size = style.heading_font
-    _apply_position(slide.shapes.title, positions.get("title") or _TWO_COL_DEFAULTS["title"])
+    defaults = _scaled_defaults(prs, _TWO_COL_DEFAULTS)
+    _apply_position(slide.shapes.title, positions.get("title") or defaults["title"])
 
     left_placeholder = slide.placeholders[1]
-    _apply_position(left_placeholder, positions.get("left") or _TWO_COL_DEFAULTS["left"])
+    _apply_position(left_placeholder, positions.get("left") or defaults["left"])
     left_ph = left_placeholder.text_frame
     left_ph.clear()
     for i, b in enumerate(slide_data.get("left_bullets", [])):
@@ -209,7 +232,7 @@ def add_two_column_slide(
         p.font.size = style.col_body_font
 
     right_placeholder = slide.placeholders[2]
-    _apply_position(right_placeholder, positions.get("right") or _TWO_COL_DEFAULTS["right"])
+    _apply_position(right_placeholder, positions.get("right") or defaults["right"])
     right_ph = right_placeholder.text_frame
     right_ph.clear()
     for i, b in enumerate(slide_data.get("right_bullets", [])):
