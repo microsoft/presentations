@@ -6,6 +6,13 @@ import sys
 import yaml
 
 
+# A slide header line: ``## [type] Title``. The ``[type]`` group matches any
+# ``\w[\w-]*`` token rather than a fixed list of known types, so slide types
+# added in the future are recognised automatically by both the parser and the
+# missing-separator check below.
+_SLIDE_HEADER_RE = re.compile(r"^##\s+\[(\w[\w-]*)\]\s+(.+)")
+
+
 def parse_spec(path: str) -> dict:
     """Parse a presentation spec markdown file into metadata + slide list."""
     with open(path, encoding="utf-8") as f:
@@ -38,10 +45,18 @@ def parse_spec(path: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def _split_slides_fence_aware(body: str) -> list[str]:
-    """Split *body* on ``\n---\n`` lines, ignoring fenced code blocks."""
+    """Split *body* on ``\n---\n`` lines, ignoring fenced code blocks.
+
+    Slides are delimited by ``---`` lines. If the author forgets the separator
+    between two ``## [type]`` headers, both land in the same chunk and the
+    second slide is silently absorbed into the first slide's notes. Detect that
+    case and emit a warning naming the offending header so the data loss is no
+    longer silent (see issue #9).
+    """
     lines = body.split("\n")
     chunks: list[str] = []
     current: list[str] = []
+    header_in_chunk = False
     in_fence = False
     for line in lines:
         if line.lstrip().startswith("```"):
@@ -51,7 +66,19 @@ def _split_slides_fence_aware(body: str) -> list[str]:
         if not in_fence and line.strip() == "---":
             chunks.append("\n".join(current))
             current = []
+            header_in_chunk = False
             continue
+        if not in_fence:
+            header = _SLIDE_HEADER_RE.match(line)
+            if header:
+                if header_in_chunk:
+                    print(
+                        f"Warning: slide header '## [{header.group(1)}] "
+                        f"{header.group(2).strip()}' is missing a '---' separator "
+                        "before it; it will be merged into the previous slide and "
+                        "its content lost. Add a '---' line to separate the slides."
+                    )
+                header_in_chunk = True
         current.append(line)
     chunks.append("\n".join(current))
     return chunks
@@ -80,7 +107,7 @@ def _parse_simple_field(text: str, name: str) -> str:
 
 def _parse_slide(raw: str) -> dict | None:
     """Parse a single slide block into a structured dict."""
-    header_match = re.match(r"^##\s+\[(\w[\w-]*)\]\s+(.+)", raw)
+    header_match = _SLIDE_HEADER_RE.match(raw)
     if not header_match:
         return None
     slide_type = header_match.group(1).strip()
