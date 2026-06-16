@@ -84,7 +84,12 @@ class TestDefaultsDict:
             "badge_width", "badge_height", "badge_font_size", "badge_corner_radius",
             "badge_gradient_start", "badge_gradient_end", "badge_text_color",
             "box_background", "box_border_color", "box_corner_radius",
+            "left_column_background", "right_column_background",
+            "column_box_border_color", "column_box_corner_radius", "column_box_padding",
+            "content_background", "content_box_corner_radius", "content_box_padding",
             "slide_background", "divider_color", "name_color",
+            "title_color", "title_font_name", "body_font_name", "body_color",
+            "title_accent_color", "title_accent_height", "title_accent_width",
             "name_font_size", "url_color", "url_font_size", "subtitle_colors",
         }
         assert expected_keys == set(_DEFAULTS.keys())

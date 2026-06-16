@@ -7,6 +7,7 @@ optional helpers for images and animations.
 from __future__ import annotations
 
 import os
+import re
 from typing import TYPE_CHECKING
 
 from pptx.dml.color import RGBColor
@@ -74,6 +75,105 @@ def _set_text_with_breaks(shape, text: str, font_size) -> None:
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.text = part
         p.font.size = font_size
+
+
+def _style_title(title_shape, style: Style) -> None:
+    """Apply title color + font-name + bold + left-align to *title_shape*."""
+    for para in title_shape.text_frame.paragraphs:
+        para.alignment = PP_ALIGN.LEFT
+        for run in para.runs:
+            if style.title_font_name:
+                run.font.name = style.title_font_name
+            if style.title_color:
+                run.font.color.rgb = _hex_to_rgb(style.title_color)
+            run.font.bold = True
+
+
+def _style_body_paragraph(paragraph, style: Style) -> None:
+    """Apply body font-name + color to every run in *paragraph*."""
+    for run in paragraph.runs:
+        if style.body_font_name:
+            run.font.name = style.body_font_name
+        if style.body_color:
+            run.font.color.rgb = _hex_to_rgb(style.body_color)
+
+
+_BOLD_RE = re.compile(r"\*\*(.+?)\*\*")
+
+
+def _set_bullet_markdown(paragraph, text: str, style: Style, font_size) -> None:
+    """Populate *paragraph* from *text* supporting inline ``**bold**`` markers."""
+    paragraph.text = ""
+    pos = 0
+    segments: list[tuple[str, bool]] = []
+    for m in _BOLD_RE.finditer(text):
+        if m.start() > pos:
+            segments.append((text[pos:m.start()], False))
+        segments.append((m.group(1), True))
+        pos = m.end()
+    if pos < len(text):
+        segments.append((text[pos:], False))
+    if not segments:
+        segments = [(text, False)]
+    for i, (seg_text, is_bold) in enumerate(segments):
+        run = paragraph.runs[0] if i == 0 and paragraph.runs else paragraph.add_run()
+        run.text = seg_text
+        run.font.size = font_size
+        if style.body_font_name:
+            run.font.name = style.body_font_name
+        if style.body_color:
+            run.font.color.rgb = _hex_to_rgb(style.body_color)
+        if is_bold:
+            run.font.bold = True
+
+
+def _suppress_bullet(paragraph) -> None:
+    """Remove the bullet marker from *paragraph* via <a:buNone/>."""
+    from pptx.oxml.ns import qn
+    pPr = paragraph._p.get_or_add_pPr()
+    for tag in ("a:buChar", "a:buAutoNum", "a:buNone"):
+        for child in pPr.findall(qn(tag)):
+            pPr.remove(child)
+    pPr.append(pPr.makeelement(qn("a:buNone"), {}))
+
+
+def _make_column_heading(paragraph) -> None:
+    """Bold every run and suppress the bullet marker on a column-title paragraph."""
+    for run in paragraph.runs:
+        run.font.bold = True
+    _suppress_bullet(paragraph)
+
+
+def _add_column_title_underline(slide, placeholder, style) -> None:
+    """Draw a thin horizontal rule beneath the column title."""
+    from pptx.enum.shapes import MSO_SHAPE
+    pad = style.column_box_padding  # inches
+    inset = Inches(pad * 0.4)
+    left = placeholder.left + inset
+    width = placeholder.width - 2 * inset
+    # Place the rule just below the heading line (≈18pt + leading)
+    rule_top = placeholder.top + Inches(0.42)
+    rule = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, left, rule_top, width, Inches(0.012),
+    )
+    rule.fill.solid()
+    rule.fill.fore_color.rgb = _hex_to_rgb("#888888")
+    rule.line.fill.background()
+
+
+def _add_title_accent(slide, title_pos: dict, style: Style) -> None:
+    """Draw a short colored bar just under the title's text baseline."""
+    if not style.title_accent_color:
+        return
+    from pptx.enum.shapes import MSO_SHAPE
+    left = Inches(title_pos["left"])
+    top = Inches(title_pos["top"] + title_pos["height"] - 0.05)
+    width = Inches(style.title_accent_width)
+    height = Inches(style.title_accent_height)
+    bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
+    bar.fill.solid()
+    bar.fill.fore_color.rgb = _hex_to_rgb(style.title_accent_color)
+    bar.line.fill.background()
 
 
 def add_title_slide(
@@ -157,7 +257,10 @@ def add_content_slide(
     slide.shapes.title.text = slide_data["title"]
     slide.shapes.title.text_frame.paragraphs[0].font.size = style.heading_font
     defaults = _scaled_defaults(prs, _CONTENT_DEFAULTS)
-    _apply_position(slide.shapes.title, positions.get("title") or defaults["title"])
+    title_pos = positions.get("title") or defaults["title"]
+    _apply_position(slide.shapes.title, title_pos)
+    _style_title(slide.shapes.title, style)
+    _add_title_accent(slide, title_pos, style)
     body_ph = slide.shapes.placeholders[1]
     content_pos = positions.get("content") or defaults["content"].copy()
     # Constrain content width when image is present to prevent overlap
@@ -170,9 +273,14 @@ def add_content_slide(
     body.clear()
     for i, b in enumerate(slide_data.get("bullets", [])):
         p = body.paragraphs[0] if i == 0 else body.add_paragraph()
-        p.text = b
         p.level = 0
-        p.font.size = style.body_font
+        _set_bullet_markdown(p, b, style, style.body_font)
+    if style.content_background:
+        _add_column_background(slide, body_ph,
+                               style.content_background,
+                               style.column_box_border_color,
+                               style.content_box_corner_radius,
+                               style.content_box_padding)
     slide.notes_slide.notes_text_frame.text = slide_data.get("notes", "")
     if slide_data.get("image"):
         _add_image(slide, slide_data["image"], positions.get("image"))
@@ -206,6 +314,52 @@ def add_section_header_slide(
         apply_animations(slide, slide_data["animations"])
 
 
+def _add_column_background(slide, placeholder, bg_hex: str, border_hex: str,
+                           corner_radius: int, padding_in: float) -> None:
+    """Draw a rounded-rect background behind *placeholder* and send to back.
+
+    ``padding_in`` inflates the rectangle around the placeholder edges so the
+    background extends slightly past the text frame.
+    """
+    from pptx.enum.shapes import MSO_SHAPE
+    from pptx.oxml.ns import qn
+
+    pad = Inches(padding_in)
+    left = placeholder.left - pad
+    top = placeholder.top - pad
+    width = placeholder.width + 2 * pad
+    height = placeholder.height + 2 * pad
+    bg = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height)
+    bg.fill.solid()
+    bg.fill.fore_color.rgb = _hex_to_rgb(bg_hex)
+    if border_hex:
+        bg.line.color.rgb = _hex_to_rgb(border_hex)
+        bg.line.width = Pt(1.0)
+    else:
+        bg.line.fill.background()
+    # Apply corner-radius adjustment value
+    sp = bg._element
+    sp_pr = sp.find(qn("p:spPr"))
+    pr_elem = sp_pr.find(qn("a:prstGeom")) if sp_pr is not None else None
+    if pr_elem is not None:
+        avLst = pr_elem.find(qn("a:avLst"))
+        if avLst is None:
+            avLst = pr_elem.makeelement(qn("a:avLst"), {})
+            pr_elem.append(avLst)
+        avLst.clear()
+        gd = avLst.makeelement(qn("a:gd"), {"name": "adj", "fmla": f"val {corner_radius}"})
+        avLst.append(gd)
+    # Send to back so the placeholder text renders on top
+    sp_tree = sp.getparent()
+    sp_tree.remove(sp)
+    insert_at = 0
+    for i, child in enumerate(sp_tree):
+        if child.tag.split("}")[-1] not in ("nvGrpSpPr", "grpSpPr"):
+            insert_at = i
+            break
+    sp_tree.insert(insert_at, sp)
+
+
 def add_two_column_slide(
     prs: Presentation,
     slide_data: dict,
@@ -217,29 +371,59 @@ def add_two_column_slide(
     slide = prs.slides.add_slide(prs.slide_layouts[3])
     positions = slide_data.get("positions", {})
     slide.shapes.title.text = slide_data["title"]
-    slide.shapes.title.text_frame.paragraphs[0].font.size = style.heading_font
     defaults = _scaled_defaults(prs, _TWO_COL_DEFAULTS)
-    _apply_position(slide.shapes.title, positions.get("title") or defaults["title"])
+    title_pos = positions.get("title") or defaults["title"]
+    slide.shapes.title.text_frame.paragraphs[0].font.size = style.heading_font
+    _apply_position(slide.shapes.title, title_pos)
+    _style_title(slide.shapes.title, style)
+    _add_title_accent(slide, title_pos, style)
 
     left_placeholder = slide.placeholders[1]
     _apply_position(left_placeholder, positions.get("left") or defaults["left"])
     left_ph = left_placeholder.text_frame
     left_ph.clear()
-    for i, b in enumerate(slide_data.get("left_bullets", [])):
+    left_bullets = slide_data.get("left_bullets", [])
+    for i, b in enumerate(left_bullets):
         p = left_ph.paragraphs[0] if i == 0 else left_ph.add_paragraph()
-        p.text = b
         p.level = 0
-        p.font.size = style.col_body_font
+        if i == 0:
+            _set_bullet_markdown(p, b, style, style.col_heading_font)
+            _make_column_heading(p)
+        else:
+            _set_bullet_markdown(p, b, style, style.col_body_font)
 
     right_placeholder = slide.placeholders[2]
     _apply_position(right_placeholder, positions.get("right") or defaults["right"])
     right_ph = right_placeholder.text_frame
     right_ph.clear()
-    for i, b in enumerate(slide_data.get("right_bullets", [])):
+    right_bullets = slide_data.get("right_bullets", [])
+    for i, b in enumerate(right_bullets):
         p = right_ph.paragraphs[0] if i == 0 else right_ph.add_paragraph()
-        p.text = b
         p.level = 0
-        p.font.size = style.col_body_font
+        if i == 0:
+            _set_bullet_markdown(p, b, style, style.col_heading_font)
+            _make_column_heading(p)
+        else:
+            _set_bullet_markdown(p, b, style, style.col_body_font)
+
+    if style.left_column_background:
+        _add_column_background(slide, left_placeholder,
+                               style.left_column_background,
+                               style.column_box_border_color,
+                               style.column_box_corner_radius,
+                               style.column_box_padding)
+    if style.right_column_background:
+        _add_column_background(slide, right_placeholder,
+                               style.right_column_background,
+                               style.column_box_border_color,
+                               style.column_box_corner_radius,
+                               style.column_box_padding)
+
+    # Title underline rules sit on top of the column backgrounds
+    if left_bullets:
+        _add_column_title_underline(slide, left_placeholder, style)
+    if right_bullets:
+        _add_column_title_underline(slide, right_placeholder, style)
 
     slide.notes_slide.notes_text_frame.text = slide_data.get("notes", "")
     if slide_data.get("image"):
