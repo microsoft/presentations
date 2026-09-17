@@ -89,6 +89,88 @@ class TestParseSpec:
 
 
 # ---------------------------------------------------------------------------
+# Missing separator detection (issue #9)
+# ---------------------------------------------------------------------------
+
+
+class TestMissingSeparatorWarning:
+    def test_warns_on_missing_separator(self, spec_path, capsys):
+        path = spec_path("""\
+            ---
+            title: T
+            ---
+
+            ## [content] Slide One
+
+            - Bullet A
+
+            ## [content] Slide Two
+
+            - Bullet B
+        """)
+        parse_spec(path)
+        out = capsys.readouterr().out
+        assert "Warning" in out
+        assert "Slide Two" in out
+        assert "---" in out
+
+    def test_no_warning_with_separators(self, spec_path, capsys):
+        path = spec_path("""\
+            ---
+            title: T
+            ---
+
+            ## [content] Slide One
+
+            - Bullet A
+
+            ---
+
+            ## [content] Slide Two
+
+            - Bullet B
+        """)
+        spec = parse_spec(path)
+        out = capsys.readouterr().out
+        assert "Warning" not in out
+        assert len(spec["slides"]) == 2
+
+    def test_warns_for_unknown_future_slide_type(self, spec_path, capsys):
+        """The check uses the generic ``[type]`` pattern, so a slide type the
+        parser does not yet special-case still triggers the warning."""
+        path = spec_path("""\
+            ---
+            title: T
+            ---
+
+            ## [title] Slide One
+
+            ## [some-future-type] Slide Two
+        """)
+        parse_spec(path)
+        out = capsys.readouterr().out
+        assert "Warning" in out
+        assert "some-future-type" in out
+
+    def test_header_inside_code_fence_ignored(self, spec_path, capsys):
+        path = spec_path("""\
+            ---
+            title: T
+            ---
+
+            ## [content] Slide One
+
+            ```markdown
+            ## [content] This is example markdown, not a real header
+            ```
+        """)
+        spec = parse_spec(path)
+        out = capsys.readouterr().out
+        assert "Warning" not in out
+        assert len(spec["slides"]) == 1
+
+
+# ---------------------------------------------------------------------------
 # _parse_slide
 # ---------------------------------------------------------------------------
 
