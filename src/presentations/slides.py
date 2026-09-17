@@ -276,6 +276,24 @@ def _interpolate_colors(colors: list[str], count: int) -> list[RGBColor]:
     return result
 
 
+def _fit_badge_font_size(label: str, usable_width_in: float, base_font_pt: int) -> int:
+    """Return a font size (pt) so the badge's longest word fits on one line.
+
+    The badge is a fixed-width rounded rectangle with word-wrap enabled. python-pptx
+    cannot shrink text the way PowerPoint can, so a word wider than the badge wraps
+    mid-word. We deterministically scale the font down until the longest single word
+    fits within *usable_width_in* (the badge width minus internal margins), never
+    enlarging past *base_font_pt* and never shrinking below a readable floor.
+    """
+    longest_word = max((len(w) for w in label.split()), default=len(label))
+    if longest_word <= 0 or usable_width_in <= 0:
+        return base_font_pt
+    # Approximate glyph advance for a bold sans-serif face: ~0.6 * font_size points wide.
+    char_width_in_per_pt = 0.6 / 72.0
+    max_pt_for_word = usable_width_in / (longest_word * char_width_in_per_pt)
+    return max(6, min(base_font_pt, int(max_pt_for_word)))
+
+
 def add_resource_box_slide(
     prs: Presentation,
     slide_data: dict,
@@ -462,9 +480,16 @@ def add_resource_box_slide(
             up.alignment = PP_ALIGN.RIGHT
 
         # Badge / label shape (rounded rectangle with gradient)
+        # Clamp the badge height so it never exceeds its container. For single-row
+        # boxes the container is only 0.85" tall while the default badge is 1.1",
+        # which made the badge protrude above and below the box (issue #10). Leave a
+        # little vertical breathing room so the badge never touches the box border.
+        badge_v_pad = 0.1
+        container_h_in = container_height / Inches(1)
+        effective_badge_h = min(badge_h, max(container_h_in - badge_v_pad, 0.1))
         badge_left = Inches(0.3)
-        badge_width, badge_height = Inches(badge_w), Inches(badge_h)
-        badge_y = box_top + Inches((container_height / Inches(1) - badge_h) / 2)
+        badge_width, badge_height = Inches(badge_w), Inches(effective_badge_h)
+        badge_y = box_top + Inches((container_h_in - effective_badge_h) / 2)
         badge = slide.shapes.add_shape(
             MSO_SHAPE.ROUNDED_RECTANGLE,
             badge_left, badge_y, badge_width, badge_height,
@@ -510,12 +535,24 @@ def add_resource_box_slide(
 
         btf = badge.text_frame
         btf.word_wrap = True
-        from pptx.enum.text import MSO_ANCHOR
+        from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE
+        # Trim internal margins to give the label more usable width, then ask
+        # PowerPoint to shrink text on overflow as a render-time backstop (issue #11).
+        btf.margin_left = Inches(0.05)
+        btf.margin_right = Inches(0.05)
+        btf.margin_top = Inches(0.02)
+        btf.margin_bottom = Inches(0.02)
+        btf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
         btf.paragraphs[0].alignment = PP_ALIGN.CENTER
         btf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        # Deterministically scale the font so the longest word fits on one line,
+        # preventing mid-word wraps (e.g. "Presentat ions") that PowerPoint's own
+        # shrink-on-overflow cannot avoid for over-wide single words.
+        usable_badge_w = badge_w - 0.1  # subtract the 0.05" left/right margins
+        fitted_font_sz = _fit_badge_font_size(label, usable_badge_w, badge_font_sz)
         bp = btf.paragraphs[0]
         bp.text = label
-        bp.font.size = Pt(badge_font_sz)
+        bp.font.size = Pt(fitted_font_sz)
         bp.font.color.rgb = badge_text_color
         bp.font.bold = True
         bp.alignment = PP_ALIGN.CENTER

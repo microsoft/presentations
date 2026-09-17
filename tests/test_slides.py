@@ -7,12 +7,14 @@ import tempfile
 
 import pytest
 from pptx import Presentation as PptxPresentation
+from pptx.enum.text import MSO_AUTO_SIZE
 from pptx.util import Inches, Pt
 
 from presentations.slides import (
     SLIDE_BUILDERS,
     _CONTENT_DEFAULTS,
     _apply_position,
+    _fit_badge_font_size,
     _hex_to_rgb,
     _interpolate_colors,
     _is_url,
@@ -521,6 +523,57 @@ class TestAddResourceBoxSlide:
         add_resource_box_slide(prs, data, style)
         assert len(prs.slides) == 1
 
+    @staticmethod
+    def _container_and_badge(slide, label):
+        """Return (container_shape, badge_shape) for the box labelled *label*."""
+        container = next(
+            s for s in slide.shapes
+            if str(s.shape_type) == "AUTO_SHAPE (1)"
+            and not (s.has_text_frame and s.text_frame.text)
+        )
+        badge = next(
+            s for s in slide.shapes
+            if s.has_text_frame and s.text_frame.text == label
+        )
+        return container, badge
+
+    def _build_single_box(self, prs, style, label, nrows=1):
+        rows = [{"name": f"R{i}", "url": "https://example.com"} for i in range(nrows)]
+        data = {
+            "type": "resource-box", "title": "T", "subtitle": "", "notes": "",
+            "animations": [], "positions": {},
+            "boxes": [{"label": label, "rows": rows}], "slide_style": {},
+        }
+        add_resource_box_slide(prs, data, style)
+        return self._container_and_badge(prs.slides[0], label)
+
+    def test_badge_within_single_row_container(self, prs, style):
+        # Issue #10: single-row badge must not protrude above/below its container.
+        container, badge = self._build_single_box(prs, style, "Learn", nrows=1)
+        ct, cb = container.top, container.top + container.height
+        bt, bb = badge.top, badge.top + badge.height
+        assert bt >= ct
+        assert bb <= cb
+
+    def test_badge_keeps_full_height_for_multi_row(self, prs, style):
+        # Regression: taller multi-row containers should not shrink the badge.
+        _, badge = self._build_single_box(prs, style, "Learn", nrows=3)
+        assert badge.height == Inches(style.badge_height)
+
+    def test_long_single_word_label_shrinks_font(self, prs, style):
+        # Issue #11: an over-wide single word must scale down to avoid mid-word wrap.
+        _, badge = self._build_single_box(prs, style, "Presentations", nrows=1)
+        assert badge.text_frame.paragraphs[0].font.size < Pt(style.badge_font_size)
+
+    def test_short_label_keeps_base_font(self, prs, style):
+        _, badge = self._build_single_box(prs, style, "Learn", nrows=1)
+        assert badge.text_frame.paragraphs[0].font.size == Pt(style.badge_font_size)
+
+    def test_badge_autosize_enabled(self, prs, style):
+        # Issue #11: PowerPoint shrink-on-overflow backstop is requested.
+        _, badge = self._build_single_box(prs, style, "Presentations", nrows=1)
+        assert badge.text_frame.auto_size == MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+
 
 # ---------------------------------------------------------------------------
 # _scaled_defaults – canvas-width scaling for core builders (issue #5)
@@ -601,3 +654,26 @@ class TestWidescreenCoreGeometry:
         add_section_header_slide(wide_prs, data, style)
         scale = wide_prs.slide_width / Inches(10)
         assert wide_prs.slides[0].shapes.title.width == Inches(9.0 * scale)
+
+
+# ---------------------------------------------------------------------------
+# _fit_badge_font_size
+# ---------------------------------------------------------------------------
+
+
+class TestFitBadgeFontSize:
+    def test_short_word_keeps_base(self):
+        assert _fit_badge_font_size("Learn", 0.8, 11) == 11
+
+    def test_long_word_shrinks(self):
+        assert _fit_badge_font_size("Presentations", 0.8, 11) < 11
+
+    def test_never_below_floor(self):
+        assert _fit_badge_font_size("Supercalifragilisticexpialidocious", 0.8, 11) >= 6
+
+    def test_multi_word_uses_longest_word(self):
+        # "Govern" (6) fits at base; the spaces should not force a shrink.
+        assert _fit_badge_font_size("Build and Govern", 0.8, 11) == 11
+
+    def test_empty_label_returns_base(self):
+        assert _fit_badge_font_size("", 0.8, 11) == 11
