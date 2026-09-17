@@ -424,18 +424,23 @@ def add_resource_box_slide(
             gd = avLst.makeelement(qn("a:gd"), {"name": "adj", "fmla": f"val {box_corner}"})
             avLst.append(gd)
 
-        # Horizontal divider line inside container
-        div_y = box_top + Inches(0.38)
-        div_line = slide.shapes.add_connector(
-            1, container_left + Inches(0.15), div_y,
-            container_left + container_width - Inches(0.15), div_y,
-        )
-        div_line.line.color.rgb = divider_color
-        div_line.line.width = Pt(0.75)
-
-        # Resource text rows inside the container
+        # Resource text rows inside the container, vertically centered so the
+        # row block isn't bottom-heavy. The block spans 0.5" per row gap; the
+        # container is 0.5" taller than the block, so a 0.25" top offset centers it.
         for i, row in enumerate(rows):
-            row_y = box_top + Inches(0.08 + 0.5 * i)
+            row_y = box_top + Inches(0.25 + 0.5 * i)
+
+            # Horizontal divider between this row and the previous one (none
+            # above the first row, so a single-row box has no stray divider).
+            if i > 0:
+                div_y = box_top + Inches(0.5 * i)
+                div_line = slide.shapes.add_connector(
+                    1, container_left + Inches(0.15), div_y,
+                    container_left + container_width - Inches(0.15), div_y,
+                )
+                div_line.line.color.rgb = divider_color
+                div_line.line.width = Pt(0.75)
+
             # Name text
             name_box = slide.shapes.add_textbox(
                 container_left + Inches(0.2), row_y,

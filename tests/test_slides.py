@@ -521,6 +521,40 @@ class TestAddResourceBoxSlide:
         add_resource_box_slide(prs, data, style)
         assert len(prs.slides) == 1
 
+    def test_inter_row_dividers(self, prs, style):
+        """A box draws one divider between each adjacent row pair: none for a
+        single-row box, n-1 for an n-row box (issue #12)."""
+        from pptx.oxml.ns import qn
+
+        data = {
+            "type": "resource-box",
+            "title": "Dividers",
+            "subtitle": "",
+            "notes": "",
+            "animations": [],
+            "positions": {},
+            "boxes": [
+                {"label": "Two", "rows": [
+                    {"name": "R1", "url": "http://1"},
+                    {"name": "R2", "url": "http://2"},
+                ]},
+                {"label": "Solo", "rows": [{"name": "R", "url": "http://s"}]},
+                {"label": "Three", "rows": [
+                    {"name": "A", "url": "http://a"},
+                    {"name": "B", "url": "http://b"},
+                    {"name": "C", "url": "http://c"},
+                ]},
+            ],
+            "slide_style": {},
+        }
+        add_resource_box_slide(prs, data, style)
+        connectors = [
+            s for s in prs.slides[0].shapes
+            if s._element.tag == qn("p:cxnSp")
+        ]
+        # Two -> 1, Solo -> 0, Three -> 2
+        assert len(connectors) == 3
+
 
 # ---------------------------------------------------------------------------
 # _scaled_defaults – canvas-width scaling for core builders (issue #5)
