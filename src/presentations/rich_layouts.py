@@ -8,6 +8,8 @@ generated decks have a consistent executive-report look out of the box.
 
 from __future__ import annotations
 
+import re
+
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
@@ -34,6 +36,13 @@ GRAY = RGBColor(0x6B, 0x72, 0x80)
 LIGHT_GRAY = RGBColor(0xD1, 0xD5, 0xDB)
 SOFT_BG = RGBColor(0xF7, 0xF6, 0xFD)
 
+# Microsoft brand palette (used by the Microsoft 4-square logo)
+MSFT_RED = RGBColor(0xF2, 0x50, 0x22)
+MSFT_GREEN = RGBColor(0x7F, 0xBA, 0x00)
+MSFT_BLUE = RGBColor(0x00, 0xA4, 0xEF)
+MSFT_YELLOW = RGBColor(0xFF, 0xB9, 0x00)
+MSFT_TEXT = RGBColor(0x73, 0x73, 0x73)
+
 SLIDE_W = Inches(13.333)
 SLIDE_H = Inches(7.5)
 
@@ -57,7 +66,7 @@ _DOT_COLORS = {
 _PILL_COLORS = {
     "critical": DOT_RED, "urgent": DOT_AMBER, "high": MID,
     "medium": MID, "low": LIGHT_GRAY,
-    "prod": DARK, "pre-prod": MID, "non-prod": LIGHT_GRAY,
+    "prod": DARK, "pre-prod": MID, "non-prod": LIGHT,
 }
 
 
@@ -103,6 +112,31 @@ def add_rounded(slide, x, y, w, h, fill, line=None, radius=0.05):
     return shp
 
 
+_INLINE_MARKUP_RE = re.compile(r"\[(u|b|i)\](.*?)\[/\1\]", re.DOTALL)
+
+
+def _parse_inline_markup(text: str):
+    """Split *text* into (segment, styles) pairs.
+
+    Recognized tags: ``[u]...[/u]`` underline, ``[b]...[/b]`` bold,
+    ``[i]...[/i]`` italic. Untagged spans return an empty style dict.
+    """
+    if not isinstance(text, str) or "[" not in text:
+        return [(text, {})]
+    parts: list[tuple[str, dict]] = []
+    pos = 0
+    for m in _INLINE_MARKUP_RE.finditer(text):
+        if m.start() > pos:
+            parts.append((text[pos:m.start()], {}))
+        tag = m.group(1)
+        style = {"u": "underline", "b": "bold", "i": "italic"}[tag]
+        parts.append((m.group(2), {style: True}))
+        pos = m.end()
+    if pos < len(text):
+        parts.append((text[pos:], {}))
+    return parts or [(text, {})]
+
+
 def add_text(slide, x, y, w, h, text, *, size=12, bold=False, color=BLACK,
              align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP, font="Segoe UI",
              italic=False, tracking=0):
@@ -118,16 +152,19 @@ def add_text(slide, x, y, w, h, text, *, size=12, bold=False, color=BLACK,
     for i, line in enumerate(lines):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.alignment = align
-        run = p.add_run()
-        run.text = line
-        run.font.name = font
-        run.font.size = Pt(size)
-        run.font.bold = bold
-        run.font.italic = italic
-        run.font.color.rgb = color
-        if tracking:
-            rPr = run._r.get_or_add_rPr()
-            rPr.set("spc", str(tracking))
+        for seg_text, seg_styles in _parse_inline_markup(line):
+            run = p.add_run()
+            run.text = seg_text
+            run.font.name = font
+            run.font.size = Pt(size)
+            run.font.bold = bold or bool(seg_styles.get("bold"))
+            run.font.italic = italic or bool(seg_styles.get("italic"))
+            run.font.color.rgb = color
+            if seg_styles.get("underline"):
+                run.font.underline = True
+            if tracking:
+                rPr = run._r.get_or_add_rPr()
+                rPr.set("spc", str(tracking))
     return tb
 
 
@@ -154,8 +191,38 @@ def _set_runs(tb, segments):
 # ---------------------------------------------------------------------------
 # Common chrome
 # ---------------------------------------------------------------------------
+def _add_microsoft_logo(slide, x, y, *, sq_in=0.14, text_size=14,
+                        text_color=MSFT_TEXT, text_bold=False):
+    """Render the Microsoft 4-square logo + ``Microsoft`` wordmark.
+
+    Top-left red, top-right green, bottom-left blue, bottom-right yellow.
+    The wordmark is placed to the right of the squares and vertically
+    centered with them.
+    """
+    sq = Inches(sq_in)
+    gap = Inches(sq_in * 0.10)
+    add_rect(slide, x, y, sq, sq, fill=MSFT_RED)
+    add_rect(slide, x + sq + gap, y, sq, sq, fill=MSFT_GREEN)
+    add_rect(slide, x, y + sq + gap, sq, sq, fill=MSFT_BLUE)
+    add_rect(slide, x + sq + gap, y + sq + gap, sq, sq, fill=MSFT_YELLOW)
+    text_x = x + sq * 2 + gap + Inches(0.08)
+    text_w = Inches(1.6)
+    text_h = sq * 2 + gap
+    add_text(slide, text_x, y, text_w, text_h,
+             "Microsoft", size=text_size, bold=text_bold, color=text_color,
+             align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.MIDDLE, font="Segoe UI")
+
+
+def _is_microsoft_wordmark(wordmark) -> bool:
+    return isinstance(wordmark, str) and wordmark.strip().lower() == "microsoft"
+
+
 def _add_chrome(slide, wordmark="athenahealth"):
-    if wordmark:
+    if _is_microsoft_wordmark(wordmark):
+        # Right-aligned: logo footprint ~1.55in, end near x=13.2
+        _add_microsoft_logo(slide, Inches(11.65), Inches(0.27),
+                            sq_in=0.14, text_size=14, text_color=MSFT_TEXT)
+    elif wordmark:
         add_text(slide, Inches(11.0), Inches(0.28), Inches(2.2), Inches(0.32),
                  wordmark, size=14, bold=True, color=DARK, align=PP_ALIGN.RIGHT)
     add_rect(slide, Inches(0.5), Inches(7.18), Inches(12.33), Emu(20000),
@@ -193,7 +260,11 @@ def add_hero_title_slide(prs, slide_data, style, *, apply_animations=None):
              fill=PALE, transparency=5)
 
     wordmark = slide_data.get("wordmark") or data.get("wordmark") or ""
-    if wordmark:
+    if _is_microsoft_wordmark(wordmark):
+        _add_microsoft_logo(slide, Inches(0.6), Inches(0.5),
+                            sq_in=0.20, text_size=22,
+                            text_color=WHITE, text_bold=False)
+    elif wordmark:
         add_text(slide, Inches(0.6), Inches(0.5), Inches(4), Inches(0.4),
                  wordmark, size=20, bold=True, color=WHITE)
 
@@ -241,14 +312,29 @@ def add_stat_cards_slide(prs, slide_data, style, *, apply_animations=None):
     x0 = Inches(0.5)
     y0 = Inches(1.85)
 
+    # Pick a uniform number font size so the longest label still fits.
+    max_len = max((len(str(c.get("number", ""))) for c in cards), default=0)
+    if max_len <= 5:
+        num_size = 44
+    elif max_len <= 7:
+        num_size = 38
+    elif max_len <= 9:
+        num_size = 32
+    elif max_len <= 11:
+        num_size = 26
+    else:
+        num_size = 22
+
     for i, card in enumerate(cards):
         x = x0 + i * (card_w + gap)
-        add_rounded(slide, x, y0, card_w, card_h, fill=SOFT_BG, line=PALE, radius=0.04)
+        add_rounded(slide, x, y0, card_w, card_h, fill=SOFT_BG, line=GREEN, radius=0.04)
         add_rect(slide, x + Inches(0.25), y0 + Inches(0.3),
                  Inches(0.45), Emu(40000), fill=GREEN)
+        num_color = _to_rgb(card.get("number_color"), DARK)
         add_text(slide, x + Inches(0.2), y0 + Inches(0.4),
                  card_w - Inches(0.4), Inches(1.2),
-                 str(card.get("number", "")), size=44, bold=True, color=DARK)
+                 str(card.get("number", "")), size=num_size, bold=True,
+                 color=num_color, font="Segoe UI Black")
         add_text(slide, x + Inches(0.25), y0 + Inches(1.65),
                  card_w - Inches(0.4), Inches(0.4),
                  card.get("label", ""), size=14, bold=True, color=DARK)
@@ -405,16 +491,29 @@ def add_stack_table_slide(prs, slide_data, style, *, apply_animations=None):
     seg_keys = [s["key"] for s in segments_def]
 
     cols_y = Inches(1.7)
+    has_notes = any(r.get("note") for r in rows)
+    has_env = any(r.get("env") for r in rows)
+    if has_notes:
+        right_col_x = Inches(10.7)
+        right_col_w = Inches(2.1)
+        right_align = PP_ALIGN.LEFT
+    else:
+        right_col_x = Inches(10.75)
+        right_col_w = Inches(0.7)
+        right_align = PP_ALIGN.RIGHT
+    right_header = data.get("right_column_header", "Total")
+
     add_text(slide, Inches(0.5), cols_y, Inches(2.7), Inches(0.3),
              "Subscription", size=11, bold=True, color=GRAY, tracking=200)
-    add_text(slide, Inches(3.2), cols_y, Inches(1.6), Inches(0.3),
-             "Environment", size=11, bold=True, color=GRAY, tracking=200)
+    if has_env:
+        add_text(slide, Inches(3.2), cols_y, Inches(1.6), Inches(0.3),
+                 "Environment", size=11, bold=True, color=GRAY, tracking=200)
     add_text(slide, Inches(4.6), cols_y, Inches(6), Inches(0.3),
              "   /   ".join(s["label"] for s in segments_def),
              size=11, bold=True, color=GRAY, tracking=200)
-    add_text(slide, Inches(10.75), cols_y, Inches(0.7), Inches(0.3),
-             "Total", size=11, bold=True, color=GRAY,
-             align=PP_ALIGN.RIGHT, tracking=200)
+    add_text(slide, right_col_x, cols_y, right_col_w, Inches(0.3),
+             right_header, size=11, bold=True, color=GRAY,
+             align=right_align, tracking=200)
 
     chart_left = Inches(4.6)
     chart_max_w = 6.0
@@ -427,16 +526,17 @@ def add_stack_table_slide(prs, slide_data, style, *, apply_animations=None):
         add_text(slide, Inches(0.5), ry, Inches(2.7), Inches(0.4),
                  r.get("name", ""), size=12, bold=True, color=DARK,
                  anchor=MSO_ANCHOR.MIDDLE)
-        env = r.get("env", "")
-        pill_w = Inches(0.95)
-        pill_h = Inches(0.26)
-        py = ry + Inches(0.07)
-        pill_color = _PILL_COLORS.get(env.lower(), GRAY)
-        add_rounded(slide, Inches(3.2), py, pill_w, pill_h,
-                    fill=pill_color, radius=0.5)
-        add_text(slide, Inches(3.2), py, pill_w, pill_h,
-                 env, size=9, bold=True, color=WHITE,
-                 align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+        if has_env:
+            env = r.get("env", "")
+            pill_w = Inches(0.95)
+            pill_h = Inches(0.26)
+            py = ry + Inches(0.07)
+            pill_color = _PILL_COLORS.get(env.lower(), GRAY)
+            add_rounded(slide, Inches(3.2), py, pill_w, pill_h,
+                        fill=pill_color, radius=0.5)
+            add_text(slide, Inches(3.2), py, pill_w, pill_h,
+                     env, size=9, bold=True, color=WHITE,
+                     align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
         seg_y = ry + Inches(0.08)
         seg_h = Inches(0.26)
         x = chart_left
@@ -448,20 +548,31 @@ def add_stack_table_slide(prs, slide_data, style, *, apply_animations=None):
                 add_rect(slide, x, seg_y, w, seg_h, fill=color)
                 x += w
         total = r.get("total", sum(r.get(k, 0) for k in seg_keys))
-        add_text(slide, Inches(10.75), ry, Inches(0.7), Inches(0.4),
-                 str(total), size=14, bold=True, color=DARK,
-                 align=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE)
+        note = r.get("note")
+        if note:
+            add_text(slide, right_col_x, ry, right_col_w, Inches(0.4),
+                     str(note), size=11, bold=True, color=DARK,
+                     align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.MIDDLE)
+        else:
+            add_text(slide, right_col_x, ry, right_col_w, Inches(0.4),
+                     str(total), size=14, bold=True, color=DARK,
+                     align=right_align, anchor=MSO_ANCHOR.MIDDLE)
 
-    # Legend
+    # Legend, evenly distributed across the chart row (4.6 to 12.83)
     leg_y = Inches(6.0)
-    legend_xs = [4.6, 6.6, 8.6, 10.6]
+    legend_left = 4.6
+    legend_right = 12.83
+    n_segs = max(1, len(segments_def))
+    seg_pitch = (legend_right - legend_left) / n_segs
+    label_w = max(0.6, seg_pitch - 0.4)
     for i, seg in enumerate(segments_def):
-        x = legend_xs[min(i, len(legend_xs) - 1)]
+        x = legend_left + i * seg_pitch
         add_rect(slide, Inches(x), leg_y + Inches(0.08), Inches(0.2),
                  Inches(0.18), fill=seg_colors[i])
         label = seg.get("legend_label", seg["label"])
-        add_text(slide, Inches(x + 0.28), leg_y, Inches(2.4),
-                 Inches(0.35), label, size=11, color=GRAY)
+        add_text(slide, Inches(x + 0.28), leg_y + Inches(0.05), Inches(label_w),
+                 Inches(0.3), label, size=11, color=GRAY,
+                 anchor=MSO_ANCHOR.MIDDLE)
 
     callout = data.get("callout") or {}
     if callout:
@@ -591,6 +702,89 @@ def add_timeline_cards_slide(prs, slide_data, style, *, apply_animations=None):
 
 
 # ---------------------------------------------------------------------------
+# 7) image-bullets — image on the left, large bulleted list on the right
+# ---------------------------------------------------------------------------
+def add_image_bullets_slide(prs, slide_data, style, *, apply_animations=None):
+    import os
+
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_chrome(slide, slide_data.get("wordmark") or "athenahealth")
+    _add_title(slide, slide_data["title"], slide_data.get("subtitle", ""))
+
+    data = slide_data.get("data") or {}
+
+    # Layout: image on left half, bullets on right half
+    img_x = Inches(0.5)
+    img_y = Inches(1.85)
+    img_w = Inches(5.8)
+    img_h = Inches(5.0)
+
+    bullets_x = Inches(6.8)
+    bullets_y = Inches(1.85)
+    bullets_w = Inches(6.03)
+
+    # Image: prefer **Image** field, fall back to data.image
+    img = slide_data.get("image") or data.get("image")
+    img_path = None
+    if isinstance(img, dict):
+        img_path = img.get("path")
+    elif isinstance(img, str):
+        img_path = img
+    if img_path and os.path.isfile(img_path):
+        # Decorative rounded backdrop behind the image
+        add_rounded(slide, img_x, img_y, img_w, img_h, fill=SOFT_BG,
+                    line=PALE, radius=0.03)
+        # Center the picture inside the backdrop; let pptx preserve aspect
+        slide.shapes.add_picture(
+            img_path,
+            img_x + Inches(0.15), img_y + Inches(0.15),
+            width=img_w - Inches(0.3), height=img_h - Inches(0.3),
+        )
+    else:
+        # Placeholder backdrop if the image hasn't been generated yet
+        add_rounded(slide, img_x, img_y, img_w, img_h, fill=SOFT_BG,
+                    line=PALE, radius=0.03)
+        add_text(slide, img_x, img_y + img_h / 2 - Inches(0.2),
+                 img_w, Inches(0.4),
+                 "(image)", size=14, color=GRAY,
+                 align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+
+    # Bullets
+    bullets = data.get("bullets") or []
+    n = max(len(bullets), 1)
+    # Per-bullet row height fills the available area
+    row_h_in = min(1.1, 5.0 / n)
+    title_size = 26 if n <= 4 else (22 if n <= 5 else 18)
+    sub_size = 14
+    cur_y = bullets_y
+    for b in bullets:
+        if isinstance(b, dict):
+            label = b.get("title") or b.get("label") or ""
+            sub = b.get("sub") or b.get("body") or ""
+        else:
+            label = str(b)
+            sub = ""
+
+        # Green accent bar on the left of each bullet
+        add_rect(slide, bullets_x, cur_y + Inches(0.1),
+                 Inches(0.08), Inches(max(0.4, row_h_in - 0.25)), fill=GREEN)
+
+        add_text(slide, bullets_x + Inches(0.25), cur_y,
+                 bullets_w - Inches(0.25), Inches(0.6),
+                 label, size=title_size, bold=True, color=DARK)
+        if sub:
+            add_text(slide, bullets_x + Inches(0.25),
+                     cur_y + Inches(0.55),
+                     bullets_w - Inches(0.25), Inches(0.5),
+                     sub, size=sub_size, color=GRAY)
+        cur_y += Inches(row_h_in)
+
+    _set_notes(slide, slide_data)
+    if apply_animations and slide_data.get("animations"):
+        apply_animations(slide, slide_data["animations"])
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 RICH_BUILDERS = {
@@ -600,4 +794,5 @@ RICH_BUILDERS = {
     "stack-table":    add_stack_table_slide,
     "priority-table": add_priority_table_slide,
     "timeline-cards": add_timeline_cards_slide,
+    "image-bullets":  add_image_bullets_slide,
 }

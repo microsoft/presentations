@@ -103,7 +103,8 @@ def render(
     # geometry; can be overridden by ``slide_size: standard`` in front matter.
     from pptx.util import Inches as _Inches
     _RICH_TYPES = {"hero-title", "stat-cards", "status-table",
-                   "stack-table", "priority-table", "timeline-cards"}
+                   "stack-table", "priority-table", "timeline-cards",
+                   "image-bullets"}
     size_pref = (metadata.get("slide_size") or "").strip().lower()
     want_widescreen = (
         size_pref == "widescreen"

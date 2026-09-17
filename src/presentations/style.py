@@ -20,7 +20,22 @@ _DEFAULTS = {
     "box_background": "#E8E8E8",
     "box_border_color": "#5B5FC7",
     "box_corner_radius": 5000,
+    "left_column_background": "",
+    "right_column_background": "",
+    "column_box_border_color": "",
+    "column_box_corner_radius": 5000,
+    "column_box_padding": 0.15,
+    "content_background": "",
+    "content_box_corner_radius": 5000,
+    "content_box_padding": 0.15,
     "slide_background": "#FFFFFF",
+    "title_color": "",
+    "title_font_name": "",
+    "body_font_name": "",
+    "body_color": "",
+    "title_accent_color": "",
+    "title_accent_height": 0.045,
+    "title_accent_width": 1.6,
     "divider_color": "#D0D0D0",
     "name_color": "#000000",
     "name_font_size": 14,
@@ -52,7 +67,22 @@ class Style:
         self.box_background = str(t["box_background"])
         self.box_border_color = str(t["box_border_color"])
         self.box_corner_radius = int(t["box_corner_radius"])
+        self.left_column_background = str(t["left_column_background"])
+        self.right_column_background = str(t["right_column_background"])
+        self.column_box_border_color = str(t["column_box_border_color"])
+        self.column_box_corner_radius = int(t["column_box_corner_radius"])
+        self.column_box_padding = float(t["column_box_padding"])
+        self.content_background = str(t["content_background"])
+        self.content_box_corner_radius = int(t["content_box_corner_radius"])
+        self.content_box_padding = float(t["content_box_padding"])
         self.slide_background = str(t["slide_background"])
+        self.title_color = str(t["title_color"])
+        self.title_font_name = str(t["title_font_name"])
+        self.body_font_name = str(t["body_font_name"])
+        self.body_color = str(t["body_color"])
+        self.title_accent_color = str(t["title_accent_color"])
+        self.title_accent_height = float(t["title_accent_height"])
+        self.title_accent_width = float(t["title_accent_width"])
         self.divider_color = str(t["divider_color"])
         self.name_color = str(t["name_color"])
         self.name_font_size = int(t["name_font_size"])

@@ -46,6 +46,27 @@ def _serialize_slide(slide: dict) -> list[str]:
         lines.append(f"**Subtitle**: {slide['subtitle']}")
         lines.append("")
 
+    # Rich-layout chrome directives (eyebrow / wordmark / footer)
+    chrome_directives = [("eyebrow", "Eyebrow"), ("wordmark", "Wordmark"), ("footer", "Footer")]
+    any_chrome = False
+    for key, label in chrome_directives:
+        val = slide.get(key)
+        if val:
+            lines.append(f"**{label}**: {val}")
+            any_chrome = True
+    if any_chrome:
+        lines.append("")
+
+    # Rich-layout **Data** YAML block
+    data_block = slide.get("data")
+    if data_block:
+        data_yaml = yaml.dump(data_block, default_flow_style=False, sort_keys=False).rstrip()
+        lines.append("**Data**:")
+        lines.append("```yaml")
+        lines.extend(data_yaml.split("\n"))
+        lines.append("```")
+        lines.append("")
+
     # Position directives
     pos_map = slide.get("positions", {})
     name_order = ["title", "subtitle", "content", "left", "right", "image"]
